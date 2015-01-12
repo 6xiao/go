@@ -13,6 +13,10 @@ var (
 	flgBits = flag.Int("bits", 64, "cache bits")
 )
 
+func init() {
+	Common.Init()
+}
+
 func RpcUidSet() {
 	defer Common.CheckPanic()
 

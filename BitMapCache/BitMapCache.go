@@ -20,6 +20,10 @@ var (
 	caches  = make(map[string]BitMapService.Cache)
 )
 
+func init() {
+	Common.Init()
+}
+
 func GetCache(name string, bits int) (BitMapService.Cache, error) {
 	cache, ok := caches[name]
 	if !ok {

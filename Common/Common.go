@@ -9,7 +9,11 @@ import (
 )
 
 func init() {
-	Init()
+	flag.Parse()
+
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 }
 
 func Init() {
@@ -20,12 +24,8 @@ func Init() {
 	})
 
 	flag.VisitAll(func(f *flag.Flag) {
-		fmt.Fprintf(os.Stderr, "-%s=%v\n", f.Name, f.Value)
+		fmt.Fprintf(os.Stderr, "-%s=%v \\\n", f.Name, f.Value)
 	})
-
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 }
 
 func CheckPanic() {

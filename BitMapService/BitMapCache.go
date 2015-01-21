@@ -3,7 +3,7 @@ package BitMapService
 import "flag"
 
 var (
-	flg10E = flag.Int64("billion", 5, "billions of cache size")
+	flg10E = flag.Int64("billion", 5, "billions of cache size, billion=1<<30")
 	OpBits [64]uint64
 )
 

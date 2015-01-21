@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	flgRpc  = flag.String("rpc", "127.0.0.1:12321", "rpc server")
-	flgSync = flag.String("sync", "127.0.0.1:12321", "sync server")
+	flgRpc  = flag.String("rpc", "127.0.0.1:12321", "rpc address of this server")
+	flgSync = flag.String("sync", "127.0.0.1:12321", "sync rpc address of remote server")
 	lock    = sync.Mutex{}
 	caches  = make(map[string]BitMapService.Cache)
 )

@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	flgRpc  = flag.String("rpc", "127.0.0.1:12321", "rpc server")
+	flgRpc  = flag.String("rpc", "127.0.0.1:12321", "rpc  address of cache server")
 	flgBits = flag.Int("bits", 64, "cache bits")
 )
 

@@ -9,8 +9,6 @@ import (
 )
 
 func init() {
-	flag.Parse()
-
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -20,7 +18,7 @@ func Init() {
 	flag.Parse()
 
 	flag.VisitAll(func(f *flag.Flag) {
-		fmt.Fprintf(os.Stderr, "#%s:%s:%s\n", f.Name, f.DefValue, f.Usage)
+		fmt.Fprintf(os.Stderr, "#%s : %s\n", f.Name, f.Usage)
 	})
 
 	flag.VisitAll(func(f *flag.Flag) {

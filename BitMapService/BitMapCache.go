@@ -14,9 +14,9 @@ func init() {
 }
 
 type CacheCommon struct {
-	bits   int
-	maxuid int64
-	count  uint64
+	bits  int
+	max   int64
+	count uint64
 }
 
 func (cc *CacheCommon) Bits() int {
@@ -39,14 +39,14 @@ func (cc *CacheCommon) ResetCount() {
 	cc.count = 0
 }
 
-func (cc *CacheCommon) SetMaxUid(uid int64) {
-	if uid > cc.maxuid {
-		cc.maxuid = uid
+func (cc *CacheCommon) SetMaxId(id int64) {
+	if id > cc.max {
+		cc.max = id
 	}
 }
 
-func (cc *CacheCommon) MaxUid() int64 {
-	return cc.maxuid
+func (cc *CacheCommon) MaxId() int64 {
+	return cc.max
 }
 
 //-----------------1------------------------------
@@ -61,16 +61,15 @@ func NewBit1Cache() *Bit1Cache {
 
 func (sc *Bit1Cache) Shift() {
 	sc.ResetCount()
-	for i, last := int64(0), sc.MaxUid()/64; i <= last; i++ {
+	for i, last := int64(0), sc.MaxId()/64; i <= last; i++ {
 		sc.set[i] = 0
 	}
 }
 
-//return : is uid first insert
-func (sc *Bit1Cache) SetUidLastFlag(uid int64) bool {
-	sc.SetMaxUid(uid)
+func (sc *Bit1Cache) SetIdLastFlag(id int64) bool {
+	sc.SetMaxId(id)
 
-	pre, post := uid>>6, uid&077
+	pre, post := id>>6, id&077
 	value, flg := sc.set[pre], OpBits[post]
 
 	if (value & flg) == 0 {
@@ -82,8 +81,8 @@ func (sc *Bit1Cache) SetUidLastFlag(uid int64) bool {
 	return false
 }
 
-func (sc *Bit1Cache) GetUidFlags(uid int64) uint64 {
-	pre, post := uid>>6, uid&077
+func (sc *Bit1Cache) GetIdFlags(id int64) uint64 {
+	pre, post := id>>6, id&077
 	value, flg := sc.set[pre], OpBits[post]
 
 	if (value & flg) == 0 {
@@ -93,11 +92,11 @@ func (sc *Bit1Cache) GetUidFlags(uid int64) uint64 {
 	return 1
 }
 
-func (sc *Bit1Cache) SetUidFlags(uid int64, value uint64) {
+func (sc *Bit1Cache) SetIdFlags(id int64, value uint64) {
 	if value > 0 {
-		sc.SetUidLastFlag(uid)
+		sc.SetIdLastFlag(id)
 	} else {
-		pre, post := uid>>6, uid&077
+		pre, post := id>>6, id&077
 		value, flg := sc.set[pre], OpBits[post]
 		sc.set[pre] = value &^ flg
 	}
@@ -115,27 +114,26 @@ func NewBit2Cache() *Bit2Cache {
 }
 
 func (sc *Bit2Cache) Shift() {
-	for i, last := int64(0), sc.MaxUid()/64; i <= last; i++ {
+	for i, last := int64(0), sc.MaxId()/64; i <= last; i++ {
 		sc.set1[i] = sc.set0[i]
 		sc.set0[i] = 0
 	}
 
 	sc.ResetCount()
-	for i, last := int64(0), sc.MaxUid(); i <= last; i++ {
-		if sc.GetUidFlags(i) > 0 {
+	for i, last := int64(0), sc.MaxId(); i <= last; i++ {
+		if sc.GetIdFlags(i) > 0 {
 			sc.AddCount()
 		}
 	}
 }
 
-//return : is uid first insert
-func (sc *Bit2Cache) SetUidLastFlag(uid int64) bool {
-	sc.SetMaxUid(uid)
-	if sc.GetUidFlags(uid) == 0 {
+func (sc *Bit2Cache) SetIdLastFlag(id int64) bool {
+	sc.SetMaxId(id)
+	if sc.GetIdFlags(id) == 0 {
 		sc.AddCount()
 	}
 
-	pre, post := uid>>6, uid&077
+	pre, post := id>>6, id&077
 	value0, flg := sc.set0[pre], OpBits[post]
 
 	if (value0 & flg) == 0 {
@@ -146,8 +144,8 @@ func (sc *Bit2Cache) SetUidLastFlag(uid int64) bool {
 	return false
 }
 
-func (sc *Bit2Cache) GetUidFlags(uid int64) uint64 {
-	pre, post := uid>>6, uid&077
+func (sc *Bit2Cache) GetIdFlags(id int64) uint64 {
+	pre, post := id>>6, id&077
 	value0, value1, flg := sc.set0[pre], sc.set1[pre], OpBits[post]
 
 	if (value0 & flg) == 0 {
@@ -165,14 +163,14 @@ func (sc *Bit2Cache) GetUidFlags(uid int64) uint64 {
 	return 3
 }
 
-func (sc *Bit2Cache) SetUidFlags(uid int64, value uint64) {
-	if value > 0 && sc.GetUidFlags(uid) == 0 {
+func (sc *Bit2Cache) SetIdFlags(id int64, value uint64) {
+	if value > 0 && sc.GetIdFlags(id) == 0 {
 		sc.AddCount()
 	}
 
-	sc.SetMaxUid(uid)
+	sc.SetMaxId(id)
 
-	pre, post := uid>>6, uid&077
+	pre, post := id>>6, id&077
 	value0, value1, flg := sc.set0[pre], sc.set1[pre], OpBits[post]
 
 	switch value {
@@ -206,7 +204,7 @@ func NewBit4Cache() *Bit4Cache {
 
 func (sc *Bit4Cache) Shift() {
 	sc.ResetCount()
-	for i, last := int64(0), sc.MaxUid()/2; i <= last; i++ {
+	for i, last := int64(0), sc.MaxId()/2; i <= last; i++ {
 		flags := sc.set[i]
 		if flags&0x7 != 0 {
 			sc.AddCount()
@@ -218,11 +216,10 @@ func (sc *Bit4Cache) Shift() {
 	}
 }
 
-//return : is uid first insert
-func (sc *Bit4Cache) SetUidLastFlag(uid int64) bool {
-	sc.SetMaxUid(uid)
+func (sc *Bit4Cache) SetIdLastFlag(id int64) bool {
+	sc.SetMaxId(id)
 
-	index, lastbit := uid>>1, uid&1
+	index, lastbit := id>>1, id&1
 	if lastbit == 0 {
 		if (sc.set[index] & 0xF) == 0 {
 			sc.AddCount()
@@ -246,8 +243,8 @@ func (sc *Bit4Cache) SetUidLastFlag(uid int64) bool {
 	return false
 }
 
-func (sc *Bit4Cache) GetUidFlags(uid int64) uint64 {
-	index, lastbit := uid>>1, uid&1
+func (sc *Bit4Cache) GetIdFlags(id int64) uint64 {
+	index, lastbit := id>>1, id&1
 
 	if lastbit == 0 {
 		return uint64(sc.set[index] & 0xF)
@@ -256,14 +253,14 @@ func (sc *Bit4Cache) GetUidFlags(uid int64) uint64 {
 	return uint64(sc.set[index] >> 4)
 }
 
-func (sc *Bit4Cache) SetUidFlags(uid int64, value uint64) {
-	if value > 0 && sc.GetUidFlags(uid) == 0 {
+func (sc *Bit4Cache) SetIdFlags(id int64, value uint64) {
+	if value > 0 && sc.GetIdFlags(id) == 0 {
 		sc.AddCount()
 	}
 
-	sc.SetMaxUid(uid)
+	sc.SetMaxId(id)
 
-	index, lastbit := uid>>1, uid&1
+	index, lastbit := id>>1, id&1
 
 	if lastbit == 0 {
 		sc.set[index] = (sc.set[index] & 0xF0) | uint8(value&0xF)
@@ -284,7 +281,7 @@ func NewBit8Cache() *Bit8Cache {
 
 func (sc *Bit8Cache) Shift() {
 	sc.ResetCount()
-	for i, last := int64(0), sc.MaxUid(); i <= last; i++ {
+	for i, last := int64(0), sc.MaxId(); i <= last; i++ {
 		sc.set[i] = sc.set[i] << 1
 		if sc.set[i] > 0 {
 			sc.AddCount()
@@ -292,33 +289,32 @@ func (sc *Bit8Cache) Shift() {
 	}
 }
 
-//return : is uid first insert
-func (sc *Bit8Cache) SetUidLastFlag(uid int64) bool {
-	sc.SetMaxUid(uid)
+func (sc *Bit8Cache) SetIdLastFlag(id int64) bool {
+	sc.SetMaxId(id)
 
-	if sc.set[uid] == 0 {
+	if sc.set[id] == 0 {
 		sc.AddCount()
 	}
 
-	if (sc.set[uid] & 1) == 0 {
-		sc.set[uid]++
+	if (sc.set[id] & 1) == 0 {
+		sc.set[id]++
 		return true
 	}
 
 	return false
 }
 
-func (sc *Bit8Cache) GetUidFlags(uid int64) uint64 {
-	return uint64(sc.set[uid])
+func (sc *Bit8Cache) GetIdFlags(id int64) uint64 {
+	return uint64(sc.set[id])
 }
 
-func (sc *Bit8Cache) SetUidFlags(uid int64, value uint64) {
-	if value > 0 && sc.set[uid] == 0 {
+func (sc *Bit8Cache) SetIdFlags(id int64, value uint64) {
+	if value > 0 && sc.set[id] == 0 {
 		sc.AddCount()
 	}
 
-	sc.SetMaxUid(uid)
-	sc.set[uid] = uint8(value)
+	sc.SetMaxId(id)
+	sc.set[id] = uint8(value)
 }
 
 // ---------------------------16-------------------------------------
@@ -333,7 +329,7 @@ func NewBit16Cache() *Bit16Cache {
 
 func (sc *Bit16Cache) Shift() {
 	sc.ResetCount()
-	for i, last := int64(0), sc.MaxUid(); i <= last; i++ {
+	for i, last := int64(0), sc.MaxId(); i <= last; i++ {
 		sc.set[i] = sc.set[i] << 1
 		if sc.set[i] > 0 {
 			sc.AddCount()
@@ -341,33 +337,32 @@ func (sc *Bit16Cache) Shift() {
 	}
 }
 
-//return : is uid first insert
-func (sc *Bit16Cache) SetUidLastFlag(uid int64) bool {
-	sc.SetMaxUid(uid)
+func (sc *Bit16Cache) SetIdLastFlag(id int64) bool {
+	sc.SetMaxId(id)
 
-	if sc.set[uid] == 0 {
+	if sc.set[id] == 0 {
 		sc.AddCount()
 	}
 
-	if (sc.set[uid] & 1) == 0 {
-		sc.set[uid]++
+	if (sc.set[id] & 1) == 0 {
+		sc.set[id]++
 		return true
 	}
 
 	return false
 }
 
-func (sc *Bit16Cache) GetUidFlags(uid int64) uint64 {
-	return uint64(sc.set[uid])
+func (sc *Bit16Cache) GetIdFlags(id int64) uint64 {
+	return uint64(sc.set[id])
 }
 
-func (sc *Bit16Cache) SetUidFlags(uid int64, value uint64) {
-	if value > 0 && sc.set[uid] == 0 {
+func (sc *Bit16Cache) SetIdFlags(id int64, value uint64) {
+	if value > 0 && sc.set[id] == 0 {
 		sc.AddCount()
 	}
 
-	sc.SetMaxUid(uid)
-	sc.set[uid] = uint16(value)
+	sc.SetMaxId(id)
+	sc.set[id] = uint16(value)
 }
 
 // -----------------------------32------------------------
@@ -382,7 +377,7 @@ func NewBit32Cache() *Bit32Cache {
 
 func (sc *Bit32Cache) Shift() {
 	sc.ResetCount()
-	for i, last := int64(0), sc.MaxUid(); i <= last; i++ {
+	for i, last := int64(0), sc.MaxId(); i <= last; i++ {
 		sc.set[i] = sc.set[i] << 1
 		if sc.set[i] > 0 {
 			sc.AddCount()
@@ -390,33 +385,32 @@ func (sc *Bit32Cache) Shift() {
 	}
 }
 
-//return : is uid first insert
-func (sc *Bit32Cache) SetUidLastFlag(uid int64) bool {
-	sc.SetMaxUid(uid)
+func (sc *Bit32Cache) SetIdLastFlag(id int64) bool {
+	sc.SetMaxId(id)
 
-	if sc.set[uid] == 0 {
+	if sc.set[id] == 0 {
 		sc.AddCount()
 	}
 
-	if (sc.set[uid] & 1) == 0 {
-		sc.set[uid]++
+	if (sc.set[id] & 1) == 0 {
+		sc.set[id]++
 		return true
 	}
 
 	return false
 }
 
-func (sc *Bit32Cache) GetUidFlags(uid int64) uint64 {
-	return uint64(sc.set[uid])
+func (sc *Bit32Cache) GetIdFlags(id int64) uint64 {
+	return uint64(sc.set[id])
 }
 
-func (sc *Bit32Cache) SetUidFlags(uid int64, value uint64) {
-	if value > 0 && sc.set[uid] == 0 {
+func (sc *Bit32Cache) SetIdFlags(id int64, value uint64) {
+	if value > 0 && sc.set[id] == 0 {
 		sc.AddCount()
 	}
 
-	sc.SetMaxUid(uid)
-	sc.set[uid] = uint32(value)
+	sc.SetMaxId(id)
+	sc.set[id] = uint32(value)
 }
 
 // ---------------------------64----------------------------
@@ -431,7 +425,7 @@ func NewBit64Cache() *Bit64Cache {
 
 func (sc *Bit64Cache) Shift() {
 	sc.ResetCount()
-	for i, last := int64(0), sc.MaxUid(); i <= last; i++ {
+	for i, last := int64(0), sc.MaxId(); i <= last; i++ {
 		sc.set[i] = sc.set[i] << 1
 		if sc.set[i] > 0 {
 			sc.AddCount()
@@ -439,31 +433,30 @@ func (sc *Bit64Cache) Shift() {
 	}
 }
 
-//return : is uid first insert
-func (sc *Bit64Cache) SetUidLastFlag(uid int64) bool {
-	sc.SetMaxUid(uid)
+func (sc *Bit64Cache) SetIdLastFlag(id int64) bool {
+	sc.SetMaxId(id)
 
-	if sc.set[uid] == 0 {
+	if sc.set[id] == 0 {
 		sc.AddCount()
 	}
 
-	if (sc.set[uid] & 1) == 0 {
-		sc.set[uid]++
+	if (sc.set[id] & 1) == 0 {
+		sc.set[id]++
 		return true
 	}
 
 	return false
 }
 
-func (sc *Bit64Cache) GetUidFlags(uid int64) uint64 {
-	return sc.set[uid]
+func (sc *Bit64Cache) GetIdFlags(id int64) uint64 {
+	return sc.set[id]
 }
 
-func (sc *Bit64Cache) SetUidFlags(uid int64, value uint64) {
-	if value > 0 && sc.set[uid] == 0 {
+func (sc *Bit64Cache) SetIdFlags(id int64, value uint64) {
+	if value > 0 && sc.set[id] == 0 {
 		sc.AddCount()
 	}
 
-	sc.SetMaxUid(uid)
-	sc.set[uid] = value
+	sc.SetMaxId(id)
+	sc.set[id] = value
 }

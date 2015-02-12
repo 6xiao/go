@@ -6,6 +6,7 @@ import (
 	"github.com/6xiao/go/Common"
 	"log"
 	"net/rpc"
+	"os"
 )
 
 var (
@@ -14,10 +15,10 @@ var (
 )
 
 func init() {
-	Common.Init()
+	Common.Init(os.Stderr)
 }
 
-func RpcUidSet() {
+func RpcSet() {
 	defer Common.CheckPanic()
 
 	client, err := rpc.Dial("tcp", *flgRpc)
@@ -28,22 +29,22 @@ func RpcUidSet() {
 
 	for i := 0; i < 256; i++ {
 		skv := BitMapService.SliceKeyValue{}
-		for uid, last := int64(i*8192), int64((i+1)*8192); uid < last; uid++ {
-			skv.Uids = append(skv.Uids, uid)
+		for id, last := int64(i*8192), int64((i+1)*8192); id < last; id++ {
+			skv.Ids = append(skv.Ids, id)
 		}
 
-		umr := BitMapService.BitMapRequest{*flgBits, "UidTest", BitMapService.OPER_SET, skv}
+		umr := BitMapService.BitMapRequest{*flgBits, "UidTest", BitMapService.OPER_SETLAST, skv}
 		out := BitMapService.SliceKeyValue{}
 		if err := client.Call(BitMapService.RPC_CALL, umr, &out); err != nil {
 			log.Println("error: Call ", err)
 			return
 		}
 
-		log.Println("send:", len(skv.Uids), "changed:", len(out.Uids), err)
+		log.Println("send:", len(skv.Ids), "changed:", len(out.Ids), err)
 	}
 }
 
-func RpcUidGet() {
+func RpcGet() {
 	defer Common.CheckPanic()
 
 	client, err := rpc.Dial("tcp", *flgRpc)
@@ -53,8 +54,8 @@ func RpcUidGet() {
 	}
 
 	skv := BitMapService.SliceKeyValue{}
-	for uid := int64(0); uid < 10; uid++ {
-		skv.Uids = append(skv.Uids, uid)
+	for id := int64(0); id < 10; id++ {
+		skv.Ids = append(skv.Ids, id)
 	}
 	req := BitMapService.BitMapRequest{*flgBits, "UidTest", BitMapService.OPER_GET, skv}
 
@@ -63,14 +64,14 @@ func RpcUidGet() {
 		log.Println("error: Call ", err)
 		return
 	}
-	log.Println("get :", len(out.Uids), len(out.Flags))
+	log.Println("get :", len(out.Ids), len(out.Flags))
 
-	for i, uid := range out.Uids {
-		log.Println("uid:", uid, "flags:", out.Flags[i])
+	for i, id := range out.Ids {
+		log.Println("id:", id, "flags:", out.Flags[i])
 	}
 }
 
-func RpcCacheShift() {
+func RpcShift() {
 	defer Common.CheckPanic()
 
 	client, err := rpc.Dial("tcp", *flgRpc)
@@ -85,12 +86,12 @@ func RpcCacheShift() {
 		log.Println("error: Call ", err)
 		return
 	}
-	log.Println("shift end, out len:", len(out.Uids))
+	log.Println("shift end, out len:", len(out.Ids))
 }
 
 func main() {
-	RpcUidSet()
-	RpcUidGet()
-	RpcCacheShift()
-	RpcUidGet()
+	RpcSet()
+	RpcGet()
+	RpcShift()
+	RpcGet()
 }

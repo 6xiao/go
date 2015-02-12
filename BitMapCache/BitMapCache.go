@@ -8,6 +8,7 @@ import (
 	"github.com/6xiao/go/Common"
 	"log"
 	"net/rpc"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -21,7 +22,7 @@ var (
 )
 
 func init() {
-	Common.Init()
+	Common.Init(os.Stderr)
 }
 
 func GetCache(name string, bits int) (BitMapService.Cache, error) {
@@ -69,57 +70,46 @@ func Request(in BitMapService.BitMapRequest, out *BitMapService.SliceKeyValue) e
 	defer lock.Unlock()
 	lock.Lock()
 
-	if in.Operator == BitMapService.OPER_INFO {
-		for cachename, cache := range caches {
-			log.Println("infomation:", cachename,
-				" bits:", cache.Bits(),
-				" max uid:", cache.MaxUid(),
-				" total count:", cache.Count())
-		}
-
-		return nil
-	}
-
 	cache, err := GetCache(in.Name, in.Bits)
 	if err != nil {
 		return err
 	}
 
-	maxuid := cache.Capacity() - 1
+	maxid := cache.Capacity() - 1
 	switch in.Operator {
-	case BitMapService.OPER_SET:
-		for _, uid := range in.Uids {
-			if uid > maxuid {
-				log.Println("too big uid :", uid)
-			} else if cache.SetUidLastFlag(uid) {
-				out.Uids = append(out.Uids, uid)
+	case BitMapService.OPER_SETLAST:
+		for _, id := range in.Ids {
+			if id > maxid {
+				log.Println("too big id :", id)
+			} else if cache.SetIdLastFlag(id) {
+				out.Ids = append(out.Ids, id)
 			}
 		}
 
 	case BitMapService.OPER_GET:
-		for _, uid := range in.Uids {
-			if uid > maxuid {
-				log.Println("too big uid :", uid)
+		for _, id := range in.Ids {
+			if id > maxid {
+				log.Println("too big id :", id)
 			} else {
-				out.Uids = append(out.Uids, uid)
-				out.Flags = append(out.Flags, cache.GetUidFlags(uid))
+				out.Ids = append(out.Ids, id)
+				out.Flags = append(out.Flags, cache.GetIdFlags(id))
 			}
 		}
 
 	case BitMapService.OPER_SHIFT:
 		cache.Shift()
-		log.Println("shift:", in.Name, " max uid:", cache.MaxUid(), " total count:", cache.Count())
+		log.Println("shift:", in.Name, " max id:", cache.MaxId(), " total count:", cache.Count())
 
-	case BitMapService.OPER_SYNC:
-		if len(in.Uids) != len(in.Flags) {
-			return errors.New("uids != flags")
+	case BitMapService.OPER_SET:
+		if len(in.Ids) != len(in.Flags) {
+			return errors.New("length of ids != flags")
 		}
 
-		for index, uid := range in.Uids {
-			if uid > maxuid {
-				log.Println("too big uid :", uid)
+		for index, id := range in.Ids {
+			if id > maxid {
+				log.Println("too big id :", id)
 			} else {
-				cache.SetUidFlags(uid, in.Flags[index]|cache.GetUidFlags(uid))
+				cache.SetIdFlags(id, in.Flags[index])
 			}
 		}
 
@@ -146,14 +136,14 @@ func ReverseSync(in string, out *bool) error {
 		log.Println("sync:", cachename, "total count :", cache.Count())
 
 		skv := BitMapService.SliceKeyValue{}
-		for uid, max := int64(0), int64(cache.MaxUid()); uid <= max; uid++ {
-			if flags := cache.GetUidFlags(uid); flags != 0 {
-				skv.Uids = append(skv.Uids, uid)
+		for id, max := int64(0), int64(cache.MaxId()); id <= max; id++ {
+			if flags := cache.GetIdFlags(id); flags != 0 {
+				skv.Ids = append(skv.Ids, id)
 				skv.Flags = append(skv.Flags, flags)
 			}
 
-			if len(skv.Uids) == 1024*1024 || uid == max {
-				umr := BitMapService.BitMapRequest{cache.Bits(), cachename, BitMapService.OPER_SYNC, skv}
+			if len(skv.Ids) == 1024*1024 || id == max {
+				umr := BitMapService.BitMapRequest{cache.Bits(), cachename, BitMapService.OPER_SET, skv}
 
 				if err := conn.Call(BitMapService.RPC_CALL, umr, nil); err != nil {
 					log.Println("error: Call ", err)
@@ -173,7 +163,7 @@ func ReverseSync(in string, out *bool) error {
 
 func RpcSync() {
 	defer Common.CheckPanic()
-	time.Sleep(time.Second * 3)
+	time.Sleep(time.Second)
 
 	rpcs := strings.Split(*flgSync, ",")
 	for _, uri := range rpcs {
@@ -192,7 +182,7 @@ func RpcSync() {
 		for cachename, cache := range caches {
 			log.Println("infomation:", cachename,
 				" bits:", cache.Bits(),
-				" max uid:", cache.MaxUid(),
+				" max id:", cache.MaxId(),
 				" total count:", cache.Count())
 		}
 	}
@@ -201,7 +191,7 @@ func RpcSync() {
 func main() {
 	go RpcSync()
 
-	trpc := BitMapService.NewBitMapRpc(*flgRpc, ReverseSync, Request)
-	BitMapService.ListenBitMapRpc(trpc)
+	trpc := BitMapService.NewBitMapServer(ReverseSync, Request)
+	Common.ListenRpc(*flgRpc, trpc, nil)
 	log.Fatal("exit ...")
 }

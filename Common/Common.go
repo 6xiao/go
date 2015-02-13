@@ -1,10 +1,12 @@
 package Common
 
 import (
+	"crypto/rand"
 	"flag"
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"path"
 	"runtime"
 	"time"
@@ -39,11 +41,13 @@ func Init(writer io.Writer) {
 // check panic when exit
 func CheckPanic() {
 	if err := recover(); err != nil {
-		log.Println("panic : ", err)
+		fmt.Fprintf(os.Stderr, "\n%v\n", err)
 
 		for skip := 1; ; skip++ {
-			if _, file, line, ok := runtime.Caller(skip); ok {
-				log.Println(skip, path.Base(file), line)
+			if pc, file, line, ok := runtime.Caller(skip); ok {
+				fn := runtime.FuncForPC(pc).Name()
+				fmt.Fprintf(os.Stderr, "%v %v %v:%v\n",
+					FormatNow(), fn, path.Base(file), line)
 			} else {
 				break
 			}
@@ -67,6 +71,11 @@ func FormatTime(t time.Time) string {
 	return t.Format("2006-01-02 15:04:05.999")
 }
 
+// format time.Now() use FormatTime
+func FormatNow() string {
+	return FormatTime(time.Now())
+}
+
 // parse a string as "2006-01-02 15:04:05.999" to time.Time
 func ParseTime(s string) (time.Time, error) {
 	return time.ParseInLocation("2006-01-02 15:04:05.999", s, time.Local)
@@ -81,4 +90,14 @@ func NumberTime(t time.Time) uint64 {
 		uint64(t.Day())*1000000000 +
 		uint64(t.Month())*100000000000 +
 		uint64(t.Year())*10000000000000
+}
+
+// create a uuid string
+func NewUUID() string {
+	u := [16]byte{}
+	rand.Read(u[:])
+	u[8] = (u[8] | 0x40) & 0x7F
+	u[6] = (u[6] & 0xF) | (4 << 4)
+	return fmt.Sprintf("%x-%x-%x-%x-%x",
+		u[0:4], u[4:6], u[6:8], u[8:10], u[10:])
 }

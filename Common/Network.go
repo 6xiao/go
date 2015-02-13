@@ -1,54 +1,53 @@
 package Common
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"net/rpc"
 )
 
-func ListenRpc(addr string, obj interface{}, atexit func()) {
+func ListenRpc(addr string, obj interface{}, atexit func()) error {
 	defer CheckPanic()
 	if atexit != nil {
 		defer atexit()
 	}
 
 	if obj == nil {
-		log.Println("rpc object is nil")
-		return
+		return fmt.Errorf("rpc object is nil")
 	}
 
 	server := rpc.NewServer()
 	server.Register(obj)
 
 	if listener, err := net.Listen("tcp", addr); err != nil {
-		log.Println("rpc listen error", addr, err)
+		return fmt.Errorf("rpc listen error : %v : %v", addr, err)
 	} else {
 		log.Println("rpc running @", addr)
 		server.Accept(listener)
 	}
+
+	return fmt.Errorf("rpc server quit : %v", addr)
 }
 
-func ListenSocket(addr string, keepalive bool, reactiver func(net.Conn), atexit func()) {
+func ListenSocket(addr string, keepalive bool, reactiver func(net.Conn), atexit func()) error {
 	defer CheckPanic()
 	if atexit != nil {
 		defer atexit()
 	}
 
 	if reactiver == nil {
-		log.Println("socket reactiver is nil")
-		return
+		return fmt.Errorf("socket reactiver is nil")
 	}
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
-		log.Println("can't resolve addr", addr, err)
-		return
+		return fmt.Errorf("can't resolve addr : %v : %v", addr, err)
 	}
 
 	listener, err := net.ListenTCP("tcp", tcpAddr)
 	if err != nil {
-		log.Println("can't listen tcp ", addr, err)
-		return
+		return fmt.Errorf("can't listen tcp : %v : %v", addr, err)
 	}
 
 	for {
@@ -63,4 +62,6 @@ func ListenSocket(addr string, keepalive bool, reactiver func(net.Conn), atexit 
 		conn.SetLinger(-1)
 		go reactiver(conn)
 	}
+
+	return fmt.Errorf("socket server quit : %v ", addr)
 }

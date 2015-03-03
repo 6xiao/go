@@ -46,6 +46,10 @@ func (cc *CacheCommon) SetMaxId(id int64) {
 }
 
 func (cc *CacheCommon) MaxId() int64 {
+	if cc.max >= cc.Capacity() {
+		return cc.Capacity() - 1
+	}
+
 	return cc.max
 }
 
@@ -61,7 +65,7 @@ func NewBit1Cache() *Bit1Cache {
 
 func (sc *Bit1Cache) Shift() {
 	sc.ResetCount()
-	for i, last := int64(0), sc.MaxId()/64; i <= last; i++ {
+	for i, _ := range sc.set {
 		sc.set[i] = 0
 	}
 }
@@ -114,8 +118,8 @@ func NewBit2Cache() *Bit2Cache {
 }
 
 func (sc *Bit2Cache) Shift() {
-	for i, last := int64(0), sc.MaxId()/64; i <= last; i++ {
-		sc.set1[i] = sc.set0[i]
+	for i, v := range sc.set0 {
+		sc.set1[i] = v
 		sc.set0[i] = 0
 	}
 
@@ -204,8 +208,7 @@ func NewBit4Cache() *Bit4Cache {
 
 func (sc *Bit4Cache) Shift() {
 	sc.ResetCount()
-	for i, last := int64(0), sc.MaxId()/2; i <= last; i++ {
-		flags := sc.set[i]
+	for i, flags := range sc.set {
 		if flags&0x7 != 0 {
 			sc.AddCount()
 		}
@@ -281,8 +284,8 @@ func NewBit8Cache() *Bit8Cache {
 
 func (sc *Bit8Cache) Shift() {
 	sc.ResetCount()
-	for i, last := int64(0), sc.MaxId(); i <= last; i++ {
-		sc.set[i] = sc.set[i] << 1
+	for i, v := range sc.set {
+		sc.set[i] = v << 1
 		if sc.set[i] > 0 {
 			sc.AddCount()
 		}
@@ -329,8 +332,8 @@ func NewBit16Cache() *Bit16Cache {
 
 func (sc *Bit16Cache) Shift() {
 	sc.ResetCount()
-	for i, last := int64(0), sc.MaxId(); i <= last; i++ {
-		sc.set[i] = sc.set[i] << 1
+	for i, v := range sc.set {
+		sc.set[i] = v << 1
 		if sc.set[i] > 0 {
 			sc.AddCount()
 		}
@@ -377,8 +380,8 @@ func NewBit32Cache() *Bit32Cache {
 
 func (sc *Bit32Cache) Shift() {
 	sc.ResetCount()
-	for i, last := int64(0), sc.MaxId(); i <= last; i++ {
-		sc.set[i] = sc.set[i] << 1
+	for i, v := range sc.set {
+		sc.set[i] = v << 1
 		if sc.set[i] > 0 {
 			sc.AddCount()
 		}
@@ -425,8 +428,8 @@ func NewBit64Cache() *Bit64Cache {
 
 func (sc *Bit64Cache) Shift() {
 	sc.ResetCount()
-	for i, last := int64(0), sc.MaxId(); i <= last; i++ {
-		sc.set[i] = sc.set[i] << 1
+	for i, v := range sc.set {
+		sc.set[i] = v << 1
 		if sc.set[i] > 0 {
 			sc.AddCount()
 		}

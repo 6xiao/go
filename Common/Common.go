@@ -41,7 +41,7 @@ func Init(writer io.Writer) {
 // check panic when exit
 func CheckPanic() {
 	if err := recover(); err != nil {
-		fmt.Fprintf(os.Stderr, "\n%v\n", err)
+		fmt.Fprintf(os.Stderr, "\n%v %v\n", FormatNow(), err)
 
 		for skip := 1; ; skip++ {
 			if pc, file, line, ok := runtime.Caller(skip); ok {

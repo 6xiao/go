@@ -34,7 +34,7 @@ func Init(writer io.Writer) {
 	})
 
 	flag.VisitAll(func(f *flag.Flag) {
-		fmt.Fprintf(writer, "-%s=%v \\\n", f.Name, f.Value)
+		fmt.Fprintf(writer, "-%s=%v \n", f.Name, f.Value)
 	})
 }
 

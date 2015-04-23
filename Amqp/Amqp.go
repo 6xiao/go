@@ -2,6 +2,7 @@ package Amqp
 
 import (
 	"flag"
+	"fmt"
 	"github.com/streadway/amqp"
 )
 
@@ -16,6 +17,15 @@ func ConnectMq(url string) (conn *amqp.Connection, channel *amqp.Channel, err er
 	}
 
 	return
+}
+
+func Publish(channel *amqp.Channel, exchange, rkey string, msg []byte) error {
+	if channel == nil {
+		return fmt.Errorf("channel is nil")
+	}
+
+	return channel.Publish(exchange, rkey, false, false,
+		amqp.Publishing{ContentType: "application/octet-stream", Body: msg})
 }
 
 func newMqConsumer(url, exchange, queue, rkey, ctag string, ack, durable, exclusive bool) (

@@ -256,6 +256,6 @@ func main() {
 	Common.Init(nil)
 
 	ni := NewIntranet()
-	err := Common.ListenSocket(*flgAddr, true, ni.Reactiver, nil)
+	err := Common.ListenSocket(*flgAddr, true, ni.Reactiver)
 	log.Println(err)
 }

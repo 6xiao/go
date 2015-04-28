@@ -60,7 +60,7 @@ func CheckPanic() {
 // recive quit signal
 func QuitSignal() <-chan os.Signal {
 	signals := make(chan os.Signal, 3)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 	return signals
 }
 

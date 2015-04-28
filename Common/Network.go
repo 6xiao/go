@@ -7,11 +7,8 @@ import (
 	"net/rpc"
 )
 
-func ListenRpc(addr string, obj interface{}, atexit func()) error {
+func ListenRpc(addr string, obj interface{}) error {
 	defer CheckPanic()
-	if atexit != nil {
-		defer atexit()
-	}
 
 	if obj == nil {
 		return fmt.Errorf("rpc object is nil")
@@ -30,11 +27,8 @@ func ListenRpc(addr string, obj interface{}, atexit func()) error {
 	return fmt.Errorf("rpc server quit : %v", addr)
 }
 
-func ListenSocket(addr string, keepalive bool, reactiver func(net.Conn), atexit func()) error {
+func ListenSocket(addr string, keepalive bool, reactiver func(net.Conn)) error {
 	defer CheckPanic()
-	if atexit != nil {
-		defer atexit()
-	}
 
 	if reactiver == nil {
 		return fmt.Errorf("socket reactiver is nil")

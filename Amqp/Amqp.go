@@ -19,6 +19,18 @@ func ConnectMq(url string) (conn *amqp.Connection, channel *amqp.Channel, err er
 	return
 }
 
+func NewMqExchange(channel *amqp.Channel, name, _type string, durable bool) error {
+	return channel.ExchangeDeclare(
+		name,    // name
+		_type,   // type
+		durable, // durable
+		true,    // auto-delete
+		false,   // internal
+		false,   // nowait
+		nil,     // args
+	)
+}
+
 func Publish(channel *amqp.Channel, exchange, rkey string, msg []byte) error {
 	if channel == nil {
 		return fmt.Errorf("channel is nil")

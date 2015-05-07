@@ -24,7 +24,7 @@ func NewMqExchange(channel *amqp.Channel, name, _type string, durable bool) erro
 		name,    // name
 		_type,   // type
 		durable, // durable
-		true,    // auto-delete
+		false,    // auto-delete
 		false,   // internal
 		false,   // nowait
 		nil,     // args

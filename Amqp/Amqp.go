@@ -24,7 +24,7 @@ func NewMqExchange(channel *amqp.Channel, name, _type string, durable bool) erro
 		name,    // name
 		_type,   // type
 		durable, // durable
-		false,    // auto-delete
+		false,   // auto-delete
 		false,   // internal
 		false,   // nowait
 		nil,     // args
@@ -94,8 +94,8 @@ func NewMqConsumer(url, exchange, queue, rkey, ctag string, ack, durable bool) (
 	return newMqConsumer(url, exchange, queue, rkey, ctag, ack, durable, false)
 }
 
-func NewExclusiveMqConsumer(url, exchange, queue, rkey, ctag string) (
+func NewExclusiveMqConsumer(url, exchange, queue, rkey, ctag string, ack, durable bool) (
 	conn *amqp.Connection, channel *amqp.Channel, deliveries <-chan amqp.Delivery, err error) {
 
-	return newMqConsumer(url, exchange, queue, rkey, ctag, false, false, true)
+	return newMqConsumer(url, exchange, queue, rkey, ctag, ack, durable, true)
 }

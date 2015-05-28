@@ -15,12 +15,13 @@ import (
 )
 
 // zero size, empty struct
-type Empty struct{}
+type EmptyStruct struct{}
 
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	log.SetPrefix("stderr")
 }
 
 // parse flag and print usage/value to writer

@@ -10,10 +10,6 @@ func (c *Counter) Count() int64 {
 	return atomic.LoadInt64((*int64)(c))
 }
 
-func (c *Counter) Empty() bool {
-	return 0 == atomic.LoadInt64((*int64)(c))
-}
-
 func (c *Counter) Enter() {
 	atomic.AddInt64((*int64)(c), 1)
 }

@@ -48,7 +48,7 @@ func ListenSocket(addr string, keepalive bool, reactiver func(net.Conn)) error {
 		conn, err := listener.AcceptTCP()
 		if err != nil {
 			log.Println("accept ", err)
-			continue
+			break
 		}
 
 		conn.SetNoDelay(true)

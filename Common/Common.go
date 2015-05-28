@@ -21,7 +21,7 @@ func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	log.SetPrefix("stderr")
+	log.SetPrefix("stderr ")
 }
 
 // parse flag and print usage/value to writer

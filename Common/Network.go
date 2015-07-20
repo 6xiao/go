@@ -59,3 +59,35 @@ func ListenSocket(addr string, keepalive bool, reactiver func(net.Conn)) error {
 
 	return fmt.Errorf("socket server quit : %v ", addr)
 }
+
+func ListenUdp(addr string, bufsize int, reactiver func(*net.UDPAddr, []byte) []byte) error {
+	defer CheckPanic()
+
+	if reactiver == nil {
+		return fmt.Errorf("udp reactiver is nil")
+	}
+
+	udpAddr, err := net.ResolveUDPAddr("udp", addr)
+	if err != nil {
+		return fmt.Errorf("can't resolve addr : %v : %v", addr, err)
+	}
+
+	conn, err := net.ListenUDP("udp", udpAddr)
+	if err != nil {
+		return fmt.Errorf("can't listen udp : %v : %v", addr, err)
+	}
+	defer conn.Close()
+
+	for {
+		data := make([]byte, bufsize)
+		nr, remote, err := conn.ReadFromUDP(data)
+		if err != nil {
+			log.Println("read from udp ", remote, err)
+			continue
+		}
+
+		conn.WriteToUDP(reactiver(remote, data[:nr]), remote)
+	}
+
+	return fmt.Errorf("udp server quit : %v ", addr)
+}

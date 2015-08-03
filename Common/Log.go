@@ -22,9 +22,18 @@ var (
 	logInst  *log.Logger
 )
 
+// parse env ENABLE_DEBUG_LOG and DISABLE_INFO_LOG
 func init() {
 	if proc, err := filepath.Abs(os.Args[0]); err == nil {
 		SetLogDir(filepath.Dir(proc))
+	}
+
+	if len(os.Getenv("ENABLE_DEBUG_LOG")) > 0 {
+		logDebug = true
+	}
+
+	if len(os.Getenv("DISABLE_INFO_LOG")) > 0 {
+		logInfo = false
 	}
 }
 

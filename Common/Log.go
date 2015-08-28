@@ -47,7 +47,7 @@ func check() {
 	logFile, err = os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
 		logFile = os.Stderr
-		fmt.Fprintln(os.Stderr, "check log file", err, "use STDOUT")
+		fmt.Fprintln(os.Stderr, NumberNow(), "check log file", err, "use STDOUT")
 	}
 }
 
@@ -57,22 +57,22 @@ func DebugLog(v ...interface{}) {
 	check()
 	logLock.Lock()
 	defer logLock.Unlock()
-	_, file, line, _ := runtime.Caller(2)
-	fmt.Fprintln(logFile, NumberNow(), file, line, "debug", v)
+	_, file, line, _ := runtime.Caller(1)
+	fmt.Fprintln(logFile, NumberNow(), filepath.Base(file), line, "debug", v)
 }
 
 func InfoLog(v ...interface{}) {
 	check()
 	logLock.Lock()
 	defer logLock.Unlock()
-	_, file, line, _ := runtime.Caller(2)
-	fmt.Fprintln(logFile, NumberNow(), file, line, "info", v)
+	_, file, line, _ := runtime.Caller(1)
+	fmt.Fprintln(logFile, NumberNow(), filepath.Base(file), line, "info", v)
 }
 
 func ErrorLog(v ...interface{}) {
 	check()
 	logLock.Lock()
 	defer logLock.Unlock()
-	_, file, line, _ := runtime.Caller(2)
-	fmt.Fprintln(logFile, NumberNow(), file, line, "error", v)
+	_, file, line, _ := runtime.Caller(1)
+	fmt.Fprintln(logFile, NumberNow(), filepath.Base(file), line, "error", v)
 }

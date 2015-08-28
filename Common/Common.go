@@ -18,9 +18,6 @@ import (
 type EmptyStruct struct{}
 
 func init() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	log.SetPrefix("stderr ")
 }
 
@@ -28,17 +25,11 @@ func init() {
 func Init(writer io.Writer) {
 	flag.Parse()
 
-	if writer == nil {
-		return
+	if writer != nil {
+		flag.VisitAll(func(f *flag.Flag) {
+			fmt.Fprintf(writer, "-%s=%v \n", f.Name, f.Value)
+		})
 	}
-
-	flag.VisitAll(func(f *flag.Flag) {
-		fmt.Fprintf(writer, "#%s : %s\n", f.Name, f.Usage)
-	})
-
-	flag.VisitAll(func(f *flag.Flag) {
-		fmt.Fprintf(writer, "-%s=%v \n", f.Name, f.Value)
-	})
 }
 
 // check panic when exit
@@ -58,6 +49,13 @@ func CheckPanic() {
 	}
 }
 
+// reload signal
+func HupSignal() <-chan os.Signal {
+	signals := make(chan os.Signal, 3)
+	signal.Notify(signals, syscall.SIGHUP)
+	return signals
+}
+
 // recive quit signal
 func QuitSignal() <-chan os.Signal {
 	signals := make(chan os.Signal, 3)
@@ -68,11 +66,9 @@ func QuitSignal() <-chan os.Signal {
 // hash : []byte to uint64
 func Hash(mem []byte) uint64 {
 	var hash uint64 = 5381
-
 	for _, b := range mem {
 		hash = (hash << 5) + hash + uint64(b)
 	}
-
 	return hash
 }
 
@@ -93,13 +89,16 @@ func ParseTime(s string) (time.Time, error) {
 
 // format a time.Time to number as 20060102150405999
 func NumberTime(t time.Time) uint64 {
-	return uint64(t.UnixNano()/1000000)%1000 +
-		uint64(t.Second())*1000 +
-		uint64(t.Minute())*100000 +
-		uint64(t.Hour())*10000000 +
-		uint64(t.Day())*1000000000 +
-		uint64(t.Month())*100000000000 +
-		uint64(t.Year())*10000000000000
+	y, m, d := t.Date()
+	h, M, s := t.Clock()
+	ms := t.Nanosecond() / 1000000
+	return uint64(ms + s*1000 + M*100000 + h*10000000 +
+		d*1000000000 + int(m)*100000000000 + y*10000000000000)
+}
+
+// format time.Now() use NumberTime
+func NumberNow() uint64 {
+	return NumberTime(time.Now())
 }
 
 // create a uuid string

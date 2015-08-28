@@ -4,22 +4,18 @@ package Common
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"time"
 )
 
 var (
-	logDir   = os.TempDir()
-	logDay   = 0
-	logDebug = false
-	logInfo  = true
-	logError = true
-	logLock  = sync.Mutex{}
-	logFile  *os.File
-	logInst  *log.Logger
+	logDir  = os.TempDir()
+	logDay  = 0
+	logLock = sync.Mutex{}
+	logFile *os.File
 )
 
 // parse env ENABLE_DEBUG_LOG and DISABLE_INFO_LOG
@@ -27,30 +23,10 @@ func init() {
 	if proc, err := filepath.Abs(os.Args[0]); err == nil {
 		SetLogDir(filepath.Dir(proc))
 	}
-
-	if len(os.Getenv("ENABLE_DEBUG_LOG")) > 0 {
-		logDebug = true
-	}
-
-	if len(os.Getenv("DISABLE_INFO_LOG")) > 0 {
-		logInfo = false
-	}
 }
 
 func SetLogDir(dir string) {
 	logDir = dir
-}
-
-func EnableDebugLog(dbg bool) {
-	logDebug = dbg
-}
-
-func EnableInfoLog(info bool) {
-	logInfo = info
-}
-
-func EnableErrorLog(err bool) {
-	logError = err
 }
 
 func check() {
@@ -67,39 +43,36 @@ func check() {
 	logProc := filepath.Base(os.Args[0])
 	filename := filepath.Join(logDir,
 		fmt.Sprintf("%s.%s.log", logProc, time.Now().Format("2006-01-02")))
-	logFile, err := os.OpenFile(filename, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
+	var err error
+	logFile, err = os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
-		logInst = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
-		logInst.Output(2, fmt.Sprintln("error", "check log file", err, "use STDOUT"))
-		return
+		logFile = os.Stderr
+		fmt.Fprintln(os.Stderr, "check log file", err, "use STDOUT")
 	}
-
-	logInst = log.New(logFile, "", log.Ldate|log.Ltime|log.Lshortfile)
 }
 
+func DropLog(v ...interface{}) {}
+
 func DebugLog(v ...interface{}) {
-	if logDebug {
-		check()
-		logLock.Lock()
-		defer logLock.Unlock()
-		logInst.Output(2, fmt.Sprintln("debug", v))
-	}
+	check()
+	logLock.Lock()
+	defer logLock.Unlock()
+	_, file, line, _ := runtime.Caller(2)
+	fmt.Fprintln(logFile, NumberNow(), file, line, "debug", v)
 }
 
 func InfoLog(v ...interface{}) {
-	if logInfo {
-		check()
-		logLock.Lock()
-		defer logLock.Unlock()
-		logInst.Output(2, fmt.Sprintln("info", v))
-	}
+	check()
+	logLock.Lock()
+	defer logLock.Unlock()
+	_, file, line, _ := runtime.Caller(2)
+	fmt.Fprintln(logFile, NumberNow(), file, line, "info", v)
 }
 
 func ErrorLog(v ...interface{}) {
-	if logError {
-		check()
-		logLock.Lock()
-		defer logLock.Unlock()
-		logInst.Output(2, fmt.Sprintln("error", v))
-	}
+	check()
+	logLock.Lock()
+	defer logLock.Unlock()
+	_, file, line, _ := runtime.Caller(2)
+	fmt.Fprintln(logFile, NumberNow(), file, line, "error", v)
 }

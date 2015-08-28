@@ -1,7 +1,5 @@
 package Common
-
 // 每日滚动的LOG实现
-
 import (
 	"fmt"
 	"os"
@@ -18,7 +16,6 @@ var (
 	logFile *os.File
 )
 
-// parse env ENABLE_DEBUG_LOG and DISABLE_INFO_LOG
 func init() {
 	if proc, err := filepath.Abs(os.Args[0]); err == nil {
 		SetLogDir(filepath.Dir(proc))
@@ -47,8 +44,22 @@ func check() {
 	logFile, err = os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
 		logFile = os.Stderr
-		fmt.Fprintln(os.Stderr, NumberNow(), "check log file", err, "use STDOUT")
+		fmt.Fprintln(os.Stderr, NumberNow(), "open log file", err, "use STDOUT")
 	}
+}
+
+func file() string {
+       _, file, line, _ := runtime.Caller(2)
+       beg, end := len(file)-1, len(file)
+       for ; beg >= 0; beg-- {
+               if os.IsPathSeparator(file[beg]) {
+                       beg++
+                       break
+               } else if file[beg] == '.' {
+                       end = beg
+               }
+       }
+       return fmt.Sprint(file[beg:end], ":", line)
 }
 
 func DropLog(v ...interface{}) {}
@@ -57,22 +68,19 @@ func DebugLog(v ...interface{}) {
 	check()
 	logLock.Lock()
 	defer logLock.Unlock()
-	_, file, line, _ := runtime.Caller(1)
-	fmt.Fprintln(logFile, NumberNow(), filepath.Base(file), line, "debug", v)
+	fmt.Fprintln(logFile, NumberNow(), file(), "debug", v)
 }
 
 func InfoLog(v ...interface{}) {
 	check()
 	logLock.Lock()
 	defer logLock.Unlock()
-	_, file, line, _ := runtime.Caller(1)
-	fmt.Fprintln(logFile, NumberNow(), filepath.Base(file), line, "info", v)
+	fmt.Fprintln(logFile, NumberNow(), file(), "info", v)
 }
 
 func ErrorLog(v ...interface{}) {
 	check()
 	logLock.Lock()
 	defer logLock.Unlock()
-	_, file, line, _ := runtime.Caller(1)
-	fmt.Fprintln(logFile, NumberNow(), filepath.Base(file), line, "error", v)
+	fmt.Fprintln(logFile, NumberNow(), file(), "error", v)
 }

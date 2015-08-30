@@ -1,4 +1,5 @@
 package Common
+
 // 每日滚动的LOG实现
 import (
 	"fmt"
@@ -49,17 +50,17 @@ func check() {
 }
 
 func file() string {
-       _, file, line, _ := runtime.Caller(2)
-       beg, end := len(file)-1, len(file)
-       for ; beg >= 0; beg-- {
-               if os.IsPathSeparator(file[beg]) {
-                       beg++
-                       break
-               } else if file[beg] == '.' {
-                       end = beg
-               }
-       }
-       return fmt.Sprint(file[beg:end], ":", line)
+	_, file, line, _ := runtime.Caller(2)
+	beg, end := len(file)-1, len(file)
+	for ; beg >= 0; beg-- {
+		if os.IsPathSeparator(file[beg]) {
+			beg++
+			break
+		} else if file[beg] == '.' {
+			end = beg
+		}
+	}
+	return fmt.Sprint(file[beg:end], ":", line)
 }
 
 func DropLog(v ...interface{}) {}

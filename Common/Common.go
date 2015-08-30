@@ -92,8 +92,8 @@ func NumberTime(t time.Time) uint64 {
 	y, m, d := t.Date()
 	h, M, s := t.Clock()
 	ms := t.Nanosecond() / 1000000
-	return uint64(ms + s*1000 + M*100000 + h*10000000 +
-		d*1000000000 + int(m)*100000000000 + y*10000000000000)
+	return uint64(ms+s*1000+M*100000+h*10000000+d*1000000000) +
+		uint64(m)*100000000000 + uint64(y)*10000000000000
 }
 
 // format time.Now() use NumberTime

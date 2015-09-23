@@ -49,8 +49,7 @@ func check() {
 	}
 }
 
-func file() string {
-	_, file, line, _ := runtime.Caller(2)
+func fileline(file string, line int) string {
 	beg, end := len(file)-1, len(file)
 	for ; beg >= 0; beg-- {
 		if os.IsPathSeparator(file[beg]) {
@@ -63,25 +62,30 @@ func file() string {
 	return fmt.Sprint(file[beg:end], ":", line)
 }
 
+func offset() string {
+	_, file, line, _ := runtime.Caller(2)
+	return fileline(file, line)
+}
+
 func DropLog(v ...interface{}) {}
 
 func DebugLog(v ...interface{}) {
 	check()
 	logLock.Lock()
 	defer logLock.Unlock()
-	fmt.Fprintln(logFile, NumberNow(), file(), "debug", v)
+	fmt.Fprintln(logFile, NumberNow(), offset(), "debug", v)
 }
 
 func InfoLog(v ...interface{}) {
 	check()
 	logLock.Lock()
 	defer logLock.Unlock()
-	fmt.Fprintln(logFile, NumberNow(), file(), "info", v)
+	fmt.Fprintln(logFile, NumberNow(), offset(), "info", v)
 }
 
 func ErrorLog(v ...interface{}) {
 	check()
 	logLock.Lock()
 	defer logLock.Unlock()
-	fmt.Fprintln(logFile, NumberNow(), file(), "error", v)
+	fmt.Fprintln(logFile, NumberNow(), offset(), "error", v)
 }

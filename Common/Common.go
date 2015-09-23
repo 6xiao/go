@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"path"
 	"runtime"
 	"syscall"
 	"time"
@@ -35,13 +34,12 @@ func Init(writer io.Writer) {
 // check panic when exit
 func CheckPanic() {
 	if err := recover(); err != nil {
-		fmt.Fprintf(os.Stderr, "\n%v %v\n", FormatNow(), err)
+		fmt.Fprintf(os.Stderr, "\n%v %v\n", NumberNow(), err)
 
 		for skip := 1; ; skip++ {
 			if pc, file, line, ok := runtime.Caller(skip); ok {
 				fn := runtime.FuncForPC(pc).Name()
-				fmt.Fprintf(os.Stderr, "%v %v %v:%v\n",
-					FormatNow(), fn, path.Base(file), line)
+				fmt.Fprintln(os.Stderr, NumberNow(), fn, fileline(file, line))
 			} else {
 				break
 			}
@@ -101,20 +99,23 @@ func NumberNow() uint64 {
 	return NumberTime(time.Now())
 }
 
+// parse a uint64 as 20060102150405999 to time.Time
+func ParseNumber(t uint64) (time.Time, error) {
+	return time.ParseInLocation("20060102150405999", fmt.Sprint(t), time.Local)
+}
+
 // create a uuid string
 func NewUUID() string {
 	u := [16]byte{}
 	rand.Read(u[:])
 	u[8] = (u[8] | 0x40) & 0x7F
 	u[6] = (u[6] & 0xF) | (4 << 4)
-	return fmt.Sprintf("%x-%x-%x-%x-%x",
-		u[0:4], u[4:6], u[6:8], u[8:10], u[10:])
+	return fmt.Sprintf("%x-%x-%x-%x-%x", u[0:4], u[4:6], u[6:8], u[8:10], u[10:])
 }
 
 func Ternary(cond bool, valTrue, valFlase interface{}) interface{} {
 	if cond {
 		return valTrue
 	}
-
 	return valFlase
 }

@@ -119,3 +119,8 @@ func Ternary(cond bool, valTrue, valFlase interface{}) interface{} {
 	}
 	return valFlase
 }
+
+type Int64Slice []int64
+func (this Int64Slice) Len() int           { return len(this) }
+func (this Int64Slice) Less(i, j int) bool { return this[i] < this[j] }
+func (this Int64Slice) Swap(i, j int)      { this[i], this[j] = this[j], this[i] }

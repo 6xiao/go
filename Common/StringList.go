@@ -1,6 +1,26 @@
 package Common
 
+import (
+	"sort"
+	"reflect"
+)
+
 type StringList []string
+
+func (this StringList) Len() int { 
+	return len(this) 
+}
+
+func (this StringList) Less(i, j int) bool {
+	if len(this[i]) == len(this[j]) {
+		return this[i] < this[j]
+	}
+	return len(this[i]) < len(this[j])
+}
+
+func (this StringList) Swap(i, j int) { 
+	this[i], this[j] = this[j], this[i] 
+}
 
 func (this StringList) UniqueAdd(token string) StringList {
 	for _, v := range this {
@@ -46,4 +66,16 @@ func (this StringList) Count() int {
 		}
 	}
 	return count
+}
+
+func StringMapKeys(m interface{}) (res []string) {
+	defer CheckPanic()
+
+	keys := reflect.ValueOf(m).MapKeys()
+	for _, v := range keys {
+		res = append(res, v.String())
+	}
+
+	sort.Sort(StringList(res))
+	return
 }

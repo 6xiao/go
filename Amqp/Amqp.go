@@ -6,6 +6,14 @@ import (
 	"github.com/streadway/amqp"
 )
 
+const (
+	Transient  uint8 = 1
+	Persistent uint8 = 2
+
+	PriorityMax uint8 = 9
+	PriorityMin uint8 = 0
+)
+
 var (
 	flgPrefetch = flag.Int("prefetch", 64, "prefetch message from mq")
 )
@@ -38,6 +46,16 @@ func Publish(channel *amqp.Channel, exchange, rkey string, msg []byte) error {
 
 	return channel.Publish(exchange, rkey, false, false,
 		amqp.Publishing{ContentType: "application/octet-stream", Body: msg})
+}
+
+func PriorityPublish(channel *amqp.Channel, exchange, rkey string, savedisk, priority uint8, msg []byte) error {
+	if channel == nil {
+		return fmt.Errorf("channel is nil")
+	}
+
+	return channel.Publish(exchange, rkey, false, false,
+		amqp.Publishing{ContentType: "application/octet-stream", Body: msg,
+			DeliveryMode: savedisk, Priority: priority})
 }
 
 func newMqConsumer(url, exchange, queue, rkey, ctag string, ack, durable, exclusive bool) (

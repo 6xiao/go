@@ -1,24 +1,20 @@
 package Common
 
 import (
+	"compress/gzip"
+	"bytes"
 	"crypto/rand"
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
-	"time"
 )
 
 // zero size, empty struct
 type EmptyStruct struct{}
-
-func init() {
-	log.SetPrefix("stderr ")
-}
 
 // parse flag and print usage/value to writer
 func Init(writer io.Writer) {
@@ -70,40 +66,6 @@ func Hash(mem []byte) uint64 {
 	return hash
 }
 
-// format a time.Time to string as 2006-01-02 15:04:05.999
-func FormatTime(t time.Time) string {
-	return t.Format("2006-01-02 15:04:05.999")
-}
-
-// format time.Now() use FormatTime
-func FormatNow() string {
-	return FormatTime(time.Now())
-}
-
-// parse a string as "2006-01-02 15:04:05.999" to time.Time
-func ParseTime(s string) (time.Time, error) {
-	return time.ParseInLocation("2006-01-02 15:04:05.999", s, time.Local)
-}
-
-// format a time.Time to number as 20060102150405999
-func NumberTime(t time.Time) uint64 {
-	y, m, d := t.Date()
-	h, M, s := t.Clock()
-	ms := t.Nanosecond() / 1000000
-	return uint64(ms+s*1000+M*100000+h*10000000+d*1000000000) +
-		uint64(m)*100000000000 + uint64(y)*10000000000000
-}
-
-// format time.Now() use NumberTime
-func NumberNow() uint64 {
-	return NumberTime(time.Now())
-}
-
-// parse a uint64 as 20060102150405999 to time.Time
-func ParseNumber(t uint64) (time.Time, error) {
-	return time.ParseInLocation("20060102150405999", fmt.Sprint(t), time.Local)
-}
-
 // create a uuid string
 func NewUUID() string {
 	u := [16]byte{}
@@ -124,3 +86,17 @@ type Int64Slice []int64
 func (this Int64Slice) Len() int           { return len(this) }
 func (this Int64Slice) Less(i, j int) bool { return this[i] < this[j] }
 func (this Int64Slice) Swap(i, j int)      { this[i], this[j] = this[j], this[i] }
+
+// compress data use gzip
+func Gzip(in []byte) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	if wt, err := gzip.NewWriterLevel(buf, gzip.BestCompression); err != nil {
+		return nil, err
+	} else {
+		if _, err := wt.Write(in); err != nil {
+			return nil, err
+		}
+		wt.Close()
+	}
+	return buf.Bytes(), nil
+}

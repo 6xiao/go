@@ -1,14 +1,14 @@
 package Common
 
 import (
-	"sort"
 	"reflect"
+	"sort"
 )
 
 type StringList []string
 
-func (this StringList) Len() int { 
-	return len(this) 
+func (this StringList) Len() int {
+	return len(this)
 }
 
 func (this StringList) Less(i, j int) bool {
@@ -18,8 +18,8 @@ func (this StringList) Less(i, j int) bool {
 	return len(this[i]) < len(this[j])
 }
 
-func (this StringList) Swap(i, j int) { 
-	this[i], this[j] = this[j], this[i] 
+func (this StringList) Swap(i, j int) {
+	this[i], this[j] = this[j], this[i]
 }
 
 func (this StringList) UniqueAdd(token string) StringList {

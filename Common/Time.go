@@ -1,7 +1,6 @@
 package Common
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -36,5 +35,18 @@ func NumberNow() uint64 {
 
 // parse a uint64 as 20060102150405999 to time.Time
 func ParseNumber(t uint64) (time.Time, error) {
-	return time.ParseInLocation("20060102150405999", fmt.Sprint(t), time.Local)
+	ns := int((t % 1000) * 1000000)
+	t /= 1000
+	s := int(t % 100)
+	t /= 100
+	M := int(t % 100)
+	t /= 100
+	h := int(t % 100)
+	t /= 100
+	d := int(t % 100)
+	t /= 100
+	m := time.Month(t % 100)
+	y := int(t / 100)
+	
+	return time.Date(y, m, d, h, M, s, ns, time.Local), nil
 }

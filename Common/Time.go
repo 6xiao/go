@@ -33,6 +33,11 @@ func NumberNow() uint64 {
 	return NumberTime(time.Now())
 }
 
+// format time.Now().UTC() use NumberTime
+func NumberUTC() uint64 {
+	return NumberTime(time.Now().UTC())
+}
+
 // parse a uint64 as 20060102150405999 to time.Time
 func ParseNumber(t uint64) (time.Time, error) {
 	ns := int((t % 1000) * 1000000)
@@ -47,6 +52,6 @@ func ParseNumber(t uint64) (time.Time, error) {
 	t /= 100
 	m := time.Month(t % 100)
 	y := int(t / 100)
-	
+
 	return time.Date(y, m, d, h, M, s, ns, time.Local), nil
 }

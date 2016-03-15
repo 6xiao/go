@@ -4,9 +4,6 @@ import (
 	"github.com/6xiao/go/BitMapCache"
 )
 
-var primes = []uint64{61, 163, 233, 347, 401, 521, 661, 809}
-var Default = NewBloomFilter(primes, BitMapCache.NewBit1Cache(1<<32))
-
 type BloomFilter struct {
 	haskKey []uint64
 	capa    uint64
@@ -15,6 +12,11 @@ type BloomFilter struct {
 
 func NewBloomFilter(keys []uint64, cache *BitMapCache.Bit1Cache) *BloomFilter {
 	return &BloomFilter{keys, uint64(cache.Capacity()), cache}
+}
+
+func NewDefaultBloomFilter() *BloomFilter {
+	var primes = []uint64{61, 163, 233, 347, 401, 521, 661, 809}
+	return NewBloomFilter(primes, BitMapCache.NewBit1Cache(1<<32))
 }
 
 func (this *BloomFilter) Keys() []uint64 {

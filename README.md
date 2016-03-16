@@ -22,3 +22,5 @@ SimpleMsgChan : 可实现简单的消息队列功能
 
 
 Amqp : 用以连接 RabbitMQ 等接受 amqp 协议的消息队列
+
+GoPool : 协程池

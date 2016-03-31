@@ -89,3 +89,10 @@ func ErrorLog(v ...interface{}) {
 	defer logLock.Unlock()
 	fmt.Fprintln(logFile, NumberNow(), offset(), "error", v)
 }
+
+func CustomLog(v ...interface{}) {
+	check()
+	logLock.Lock()
+	defer logLock.Unlock()
+	fmt.Fprintln(logFile, NumberNow(), v)
+}

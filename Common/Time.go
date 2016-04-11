@@ -14,9 +14,19 @@ func FormatNow() string {
 	return FormatTime(time.Now())
 }
 
+// format time.Now().UTC() use FormatTime
+func FormatUTC() string {
+	return FormatTime(time.Now().UTC())
+}
+
 // parse a string as "2006-01-02 15:04:05.999" to time.Time
 func ParseTime(s string) (time.Time, error) {
 	return time.ParseInLocation("2006-01-02 15:04:05.999", s, time.Local)
+}
+
+// parse a string as "2006-01-02 15:04:05.999" to time.Time
+func ParseTimeUTC(s string) (time.Time, error) {
+	return time.ParseInLocation("2006-01-02 15:04:05.999", s, time.UTC)
 }
 
 // format a time.Time to number as 20060102150405999
@@ -39,7 +49,7 @@ func NumberUTC() uint64 {
 }
 
 // parse a uint64 as 20060102150405999 to time.Time
-func ParseNumber(t uint64) (time.Time, error) {
+func parseNumber(t uint64, tl *time.Location) (time.Time, error) {
 	ns := int((t % 1000) * 1000000)
 	t /= 1000
 	s := int(t % 100)
@@ -53,5 +63,13 @@ func ParseNumber(t uint64) (time.Time, error) {
 	m := time.Month(t % 100)
 	y := int(t / 100)
 
-	return time.Date(y, m, d, h, M, s, ns, time.Local), nil
+	return time.Date(y, m, d, h, M, s, ns, tl), nil
+}
+
+func ParseNumber(t uint64) (time.Time, error) {
+	return parseNumber(t, time.Local)
+}
+
+func ParseNumberUTC(t uint64) (time.Time, error) {
+	return parseNumber(t, time.UTC)
 }

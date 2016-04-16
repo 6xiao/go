@@ -4,9 +4,17 @@ import (
 	"time"
 )
 
+const tmFmtWithMS = "2006-01-02 15:04:05.999"
+const tmFmtMissMS = "2006-01-02 15:04:05"
+
 // format a time.Time to string as 2006-01-02 15:04:05.999
 func FormatTime(t time.Time) string {
-	return t.Format("2006-01-02 15:04:05.999")
+	return t.Format(tmFmtWithMS)
+}
+
+// format a time.Time to string as 2006-01-02 15:04:05
+func FormatTime19(t time.Time) string {
+	return t.Format(tmFmtMissMS)
 }
 
 // format time.Now() use FormatTime
@@ -19,14 +27,20 @@ func FormatUTC() string {
 	return FormatTime(time.Now().UTC())
 }
 
-// parse a string as "2006-01-02 15:04:05.999" to time.Time
+// parse a string to time.Time
 func ParseTime(s string) (time.Time, error) {
-	return time.ParseInLocation("2006-01-02 15:04:05.999", s, time.Local)
+	if len(s) == len(tmFmtMissMS) {
+		return time.ParseInLocation(tmFmtMissMS, s, time.Local)
+	}
+	return time.ParseInLocation(tmFmtWithMS, s, time.Local)
 }
 
 // parse a string as "2006-01-02 15:04:05.999" to time.Time
 func ParseTimeUTC(s string) (time.Time, error) {
-	return time.ParseInLocation("2006-01-02 15:04:05.999", s, time.UTC)
+	if len(s) == len(tmFmtMissMS) {
+		return time.ParseInLocation(tmFmtMissMS, s, time.UTC)
+	}
+	return time.ParseInLocation(tmFmtWithMS, s, time.UTC)
 }
 
 // format a time.Time to number as 20060102150405999

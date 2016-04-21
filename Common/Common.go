@@ -1,8 +1,6 @@
 package Common
 
 import (
-	"bytes"
-	"compress/gzip"
 	"crypto/rand"
 	"flag"
 	"fmt"
@@ -57,15 +55,6 @@ func QuitSignal() <-chan os.Signal {
 	return signals
 }
 
-// hash : []byte to uint64
-func Hash(mem []byte) uint64 {
-	var hash uint64 = 5381
-	for _, b := range mem {
-		hash = (hash << 5) + hash + uint64(b)
-	}
-	return hash
-}
-
 // create a uuid string
 func NewUUID() string {
 	u := [16]byte{}
@@ -87,17 +76,3 @@ type Int64Slice []int64
 func (this Int64Slice) Len() int           { return len(this) }
 func (this Int64Slice) Less(i, j int) bool { return this[i] < this[j] }
 func (this Int64Slice) Swap(i, j int)      { this[i], this[j] = this[j], this[i] }
-
-// compress data use gzip
-func Gzip(in []byte) ([]byte, error) {
-	buf := new(bytes.Buffer)
-	if wt, err := gzip.NewWriterLevel(buf, gzip.BestCompression); err != nil {
-		return nil, err
-	} else {
-		if _, err := wt.Write(in); err != nil {
-			return nil, err
-		}
-		wt.Close()
-	}
-	return buf.Bytes(), nil
-}

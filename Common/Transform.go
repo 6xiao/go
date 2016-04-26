@@ -8,24 +8,6 @@ import (
 	"io/ioutil"
 )
 
-// clear text unprint char
-func CleanText(in string) string {
-	out := make([]rune, 0, len(in))
-	for _, c := range in {
-		switch {
-		case c > 0xFFFB:
-			// drop
-		case c < 32 && c != '\t' && c != '\r' && c != '\n':
-			out = append(out, ' ')
-		case c > 127 && c < 160:
-			out = append(out, ' ')
-		default:
-			out = append(out, c)
-		}
-	}
-	return string(out)
-}
-
 // hash : []byte to uint64
 func Hash(mem []byte) uint64 {
 	var hash uint64 = 5381

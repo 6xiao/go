@@ -31,21 +31,22 @@ func check() {
 	logLock.Lock()
 	defer logLock.Unlock()
 
-	if logDay == time.Now().Day() {
+	now := time.Now().UTC()
+	if logDay == now.Day() {
 		return
 	}
 
-	logDay = time.Now().Day()
+	logDay = now.Day()
 	logFile.Sync()
 	logFile.Close()
 	logProc := filepath.Base(os.Args[0])
 	filename := filepath.Join(logDir,
-		fmt.Sprintf("%s.%s.log", logProc, time.Now().Format("2006-01-02")))
+		fmt.Sprintf("%s.%s.log", logProc, now.Format("2006-01-02")))
 	var err error
 	logFile, err = os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
 		logFile = os.Stderr
-		fmt.Fprintln(os.Stderr, NumberNow(), "open log file", err, "use STDOUT")
+		fmt.Fprintln(os.Stderr, NumberUTC(), "open log file", err, "use STDOUT")
 	}
 }
 
@@ -73,26 +74,26 @@ func DebugLog(v ...interface{}) {
 	check()
 	logLock.Lock()
 	defer logLock.Unlock()
-	fmt.Fprintln(logFile, NumberNow(), offset(), "debug", v)
+	fmt.Fprintln(logFile, NumberUTC(), offset(), "debug", v)
 }
 
 func InfoLog(v ...interface{}) {
 	check()
 	logLock.Lock()
 	defer logLock.Unlock()
-	fmt.Fprintln(logFile, NumberNow(), offset(), "info", v)
+	fmt.Fprintln(logFile, NumberUTC(), offset(), "info", v)
 }
 
 func ErrorLog(v ...interface{}) {
 	check()
 	logLock.Lock()
 	defer logLock.Unlock()
-	fmt.Fprintln(logFile, NumberNow(), offset(), "error", v)
+	fmt.Fprintln(logFile, NumberUTC(), offset(), "error", v)
 }
 
 func CustomLog(v ...interface{}) {
 	check()
 	logLock.Lock()
 	defer logLock.Unlock()
-	fmt.Fprintln(logFile, NumberNow(), v)
+	fmt.Fprintln(logFile, NumberUTC(), v)
 }

@@ -15,6 +15,9 @@ BitMapCache系列 : 一个内存位图缓存服务。比如需要表示QQ号是�
 BloomFIlter : 布隆过滤器的Go语言实现
 
 
+TrieTree : TrieTree(字典树)的Go语言实现
+
+
 DctDst : 离散正弦变换及其逆变换，离散余弦变换及其逆变换
 
 
@@ -23,4 +26,7 @@ SimpleMsgChan : 可实现简单的消息队列功能
 
 Amqp : 用以连接 RabbitMQ 等接受 amqp 协议的消息队列
 
+
 GoPool : 协程池
+
+

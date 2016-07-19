@@ -1,0 +1,117 @@
+package TrieTree
+
+type WordCount struct {
+	Word  string
+	Count int
+}
+
+type topN struct {
+	top []*WordCount
+	min int
+}
+
+func (this *topN) insert(str string, count int) {
+	wc := &WordCount{str, count}
+	for i := 0; i < len(this.top) && wc != nil; i++ {
+		if this.top[i] != nil && this.top[i].Count == count && this.top[i].Word == str {
+			return
+		}
+		if this.top[i] == nil || wc.Count > this.top[i].Count {
+			this.top[i], wc = wc, this.top[i]
+		}
+	}
+	if wc != nil {
+		this.min = this.top[len(this.top)-1].Count
+	}
+}
+
+func (this *topN) compact() []*WordCount {
+	res := make([]*WordCount, 0, len(this.top))
+	for _, v := range this.top {
+		if v != nil {
+			res = append(res, v)
+		}
+	}
+	return res
+}
+
+type Node struct {
+	Count    int
+	Parent   *Node
+	Children map[rune]*Node
+}
+
+func NewTrieTree() *Node {
+	return new(Node)
+}
+
+func (this *Node) add(seg []rune, index int, count int) int {
+	if index >= len(seg) {
+		this.Count += count
+		return this.Count
+	}
+
+	if this.Children == nil {
+		this.Children = make(map[rune]*Node, 1)
+	}
+
+	value := seg[index]
+	if child, ok := this.Children[value]; !ok || child == nil {
+		n := new(Node)
+		n.Parent = this
+		this.Children[value] = n
+	}
+
+	return this.Children[value].add(seg, index+1, count)
+}
+
+func (this *Node) Add(str string, count int) int {
+	return this.add([]rune(str), 0, count)
+}
+
+func (this *Node) all(seg []rune, top *topN) {
+	if this.Count > top.min {
+		top.insert(string(seg), this.Count)
+	}
+
+	for r, n := range this.Children {
+		n.all(append(seg, r), top)
+	}
+}
+
+func (this *Node) find(seg []rune) *Node {
+	node := this
+	for _, v := range seg {
+		if child, ok := node.Children[v]; ok && child != nil {
+			node = child
+		} else {
+			return nil
+		}
+	}
+	return node
+}
+
+func (this *Node) PrefixSearch(prefix string, topCount int) []*WordCount {
+	seg, top := []rune(prefix), topN{make([]*WordCount, topCount), 0}
+	if node := this.find(seg); node != nil {
+		node.all(seg, &top)
+	}
+	return top.compact()
+}
+
+func (this *Node) fuzzy(root *Node, pre, seg []rune, top *topN) {
+	for r, c := range this.Children {
+		c.fuzzy(root, append(pre, r), seg, top)
+	}
+
+	rp := append(pre, seg...)
+	if node := root.find(rp); node != nil {
+		node.all(rp, top)
+	}
+}
+
+func (this *Node) FuzzySearch(sub string, topCount int) []*WordCount {
+	seg, top := []rune(sub), topN{make([]*WordCount, topCount), 0}
+	this.fuzzy(this, nil, seg, &top)
+	return top.compact()
+}

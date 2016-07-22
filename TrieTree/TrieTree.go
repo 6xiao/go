@@ -10,10 +10,10 @@ type topN struct {
 	min int
 }
 
-func (this *topN) insert(str string, count int) {
-	wc := &WordCount{str, count}
+func (this *topN) insert(r []rune, count int) {
+	wc := &WordCount{string(r), count}
 	for i := 0; i < len(this.top) && wc != nil; i++ {
-		if this.top[i] != nil && this.top[i].Count == count && this.top[i].Word == str {
+		if this.top[i] != nil && this.top[i].Count == count && this.top[i].Word == wc.Word {
 			return
 		}
 		if this.top[i] == nil || wc.Count > this.top[i].Count {
@@ -71,7 +71,7 @@ func (this *Node) Add(str string, count int) int {
 
 func (this *Node) all(seg []rune, top *topN) {
 	if this.Count > top.min {
-		top.insert(string(seg), this.Count)
+		top.insert(seg, this.Count)
 	}
 
 	for r, n := range this.Children {
@@ -100,13 +100,13 @@ func (this *Node) PrefixSearch(prefix string, topCount int) []*WordCount {
 }
 
 func (this *Node) substr(root *Node, pre, seg []rune, top *topN) {
-	for r, c := range this.Children {
-		c.substr(root, append(pre, r), seg, top)
-	}
-
 	rp := append(pre, seg...)
 	if node := root.find(rp); node != nil {
 		node.all(rp, top)
+	}
+
+	for r, c := range this.Children {
+		c.substr(root, append(pre, r), seg, top)
 	}
 }
 
@@ -118,6 +118,7 @@ func (this *Node) SubstrSearch(sub string, topCount int) []*WordCount {
 
 func (this *Node) fuzzy(pre, seg []rune, index int, top *topN) {
 	if index >= len(seg) {
+		this.all(pre, top)
 		for r, c := range this.Children {
 			c.all(append(pre, r), top)
 		}

@@ -99,9 +99,9 @@ func (this *Node) PrefixSearch(prefix string, topCount int) []*WordCount {
 	return top.compact()
 }
 
-func (this *Node) fuzzy(root *Node, pre, seg []rune, top *topN) {
+func (this *Node) substr(root *Node, pre, seg []rune, top *topN) {
 	for r, c := range this.Children {
-		c.fuzzy(root, append(pre, r), seg, top)
+		c.substr(root, append(pre, r), seg, top)
 	}
 
 	rp := append(pre, seg...)
@@ -110,8 +110,31 @@ func (this *Node) fuzzy(root *Node, pre, seg []rune, top *topN) {
 	}
 }
 
-func (this *Node) FuzzySearch(sub string, topCount int) []*WordCount {
+func (this *Node) SubstrSearch(sub string, topCount int) []*WordCount {
 	seg, top := []rune(sub), topN{make([]*WordCount, topCount), 0}
-	this.fuzzy(this, nil, seg, &top)
+	this.substr(this, nil, seg, &top)
+	return top.compact()
+}
+
+func (this *Node) fuzzy(pre, seg []rune, index int, top *topN) {
+	if index >= len(seg) {
+		for r, c := range this.Children {
+			c.all(append(pre, r), top)
+		}
+		return
+	}
+
+	for r, c := range this.Children {
+		if r == seg[index] {
+			c.fuzzy(append(pre, r), seg, index+1, top)
+		} else {
+			c.fuzzy(append(pre, r), seg, index, top)
+		}
+	}
+}
+
+func (this *Node) FuzzySearch(fuzzy string, topCount int) []*WordCount {
+	seg, top := []rune(fuzzy), topN{make([]*WordCount, topCount), 0}
+	this.fuzzy(nil, seg, 0, &top)
 	return top.compact()
 }

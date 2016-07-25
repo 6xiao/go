@@ -37,7 +37,6 @@ func (this *topN) compact() []*WordCount {
 
 type Node struct {
 	Count    int
-	Parent   *Node
 	Children map[rune]*Node
 }
 
@@ -57,9 +56,7 @@ func (this *Node) add(seg []rune, index int, count int) int {
 
 	value := seg[index]
 	if child, ok := this.Children[value]; !ok || child == nil {
-		n := new(Node)
-		n.Parent = this
-		this.Children[value] = n
+		this.Children[value] = new(Node)
 	}
 
 	return this.Children[value].add(seg, index+1, count)

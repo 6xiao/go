@@ -44,9 +44,13 @@ func NewTrieTree() *Node {
 	return new(Node)
 }
 
-func (this *Node) add(seg []rune, index int, count int) int {
+func (this *Node) add(seg []rune, index, count, incr int) int {
 	if index >= len(seg) {
-		this.Count += count
+		if count > 0 {
+			this.Count = count
+		} else {
+			this.Count += incr
+		}
 		return this.Count
 	}
 
@@ -59,11 +63,11 @@ func (this *Node) add(seg []rune, index int, count int) int {
 		this.Children[value] = new(Node)
 	}
 
-	return this.Children[value].add(seg, index+1, count)
+	return this.Children[value].add(seg, index+1, count, incr)
 }
 
-func (this *Node) Add(str string, count int) int {
-	return this.add([]rune(str), 0, count)
+func (this *Node) Add(str string, count, incr int) int {
+	return this.add([]rune(str), 0, count, incr)
 }
 
 func (this *Node) all(seg []rune, top *topN) {

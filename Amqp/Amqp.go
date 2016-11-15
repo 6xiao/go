@@ -58,6 +58,31 @@ func PriorityPublish(channel *amqp.Channel, exchange, rkey string, savedisk, pri
 			DeliveryMode: savedisk, Priority: priority})
 }
 
+func NewMqQueue(channel *amqp.Channel, exchange, queue, rkey string, durable, exclusive bool) error {
+	if _, err := channel.QueueDeclare(
+		queue,     // name of the queue
+		durable,   // durable
+		exclusive, // delete when usused
+		exclusive, // exclusive
+		false,     // noWait
+		nil,       // arguments
+	); err != nil {
+		return err
+	}
+
+	if err := channel.QueueBind(
+		queue,    // name of the queue
+		rkey,     // bindingKey
+		exchange, // sourceExchange
+		false,    // noWait
+		nil,      // arguments
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func newMqConsumer(url, exchange, queue, rkey, ctag string, ack, durable, exclusive bool) (
 	conn *amqp.Connection, channel *amqp.Channel, deliveries <-chan amqp.Delivery, err error) {
 
@@ -66,23 +91,8 @@ func newMqConsumer(url, exchange, queue, rkey, ctag string, ack, durable, exclus
 		return
 	}
 
-	channel.QueueDeclare(
-		queue,     // name of the queue
-		durable,   // durable
-		exclusive, // delete when usused
-		exclusive, // exclusive
-		false,     // noWait
-		nil,       // arguments
-	)
-
-	if err = channel.QueueBind(
-		queue,    // name of the queue
-		rkey,     // bindingKey
-		exchange, // sourceExchange
-		false,    // noWait
-		nil,      // arguments
-	); err != nil {
-		conn.Close()
+	err = NewMqQueue(channel, exchange, queue, rkey, durable, exclusive)
+	if err != nil {
 		return
 	}
 

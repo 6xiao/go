@@ -29,7 +29,7 @@ func newTopN(size int) *topN {
 		size = 3
 	}
 
-	return &topN{make([]*WordCount, size*4), size, 0}
+	return &topN{make([]*WordCount, 0, size*4), size, 0}
 }
 
 func (this *topN) insert(r []rune, count int) {
@@ -39,7 +39,7 @@ func (this *topN) insert(r []rune, count int) {
 
 	word := string(r)
 	for _, wc := range this.res {
-		if wc.Word == word {
+		if wc != nil && wc.Word == word {
 			return
 		}
 	}

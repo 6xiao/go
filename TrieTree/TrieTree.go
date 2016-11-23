@@ -1,6 +1,8 @@
 package TrieTree
 
-import "sort"
+import (
+	"sort"
+)
 
 type WordCount struct {
 	Word  string
@@ -17,33 +19,45 @@ func (this SearchResult) Less(i, j int) bool {
 }
 
 type topN struct {
-	top []*WordCount
-	min int
+	res  SearchResult
+	size int
+	min  int
+}
+
+func newTopN(size int) *topN {
+	if size <= 0 {
+		size = 3
+	}
+
+	return &topN{make([]*WordCount, size*4), size, 0}
 }
 
 func (this *topN) insert(r []rune, count int) {
-	wc := &WordCount{string(r), count}
-	for i := 0; i < len(this.top) && wc != nil; i++ {
-		if this.top[i] != nil && this.top[i].Count == count && this.top[i].Word == wc.Word {
+	if count <= this.min {
+		return
+	}
+
+	word := string(r)
+	for _, wc := range this.res {
+		if wc.Word == word {
 			return
 		}
-		if this.top[i] == nil || wc.Count > this.top[i].Count {
-			this.top[i], wc = wc, this.top[i]
-		}
 	}
-	if wc != nil {
-		this.min = this.top[len(this.top)-1].Count
+
+	this.res = append(this.res, &WordCount{word, count})
+	if len(this.res) > this.size*3 {
+		this.res.Sort()
+		this.min = this.res[this.size].Count
+		this.res = this.res[:this.size]
 	}
 }
 
-func (this *topN) compact() []*WordCount {
-	res := make([]*WordCount, 0, len(this.top))
-	for _, v := range this.top {
-		if v != nil {
-			res = append(res, v)
-		}
+func (this *topN) result() SearchResult {
+	if len(this.res) > this.size {
+		this.res.Sort()
+		return this.res[:this.size]
 	}
-	return res
+	return this.res
 }
 
 type Node struct {
@@ -104,11 +118,11 @@ func (this *Node) find(seg []rune) *Node {
 }
 
 func (this *Node) PrefixSearch(prefix string, topCount int) SearchResult {
-	seg, top := []rune(prefix), topN{make([]*WordCount, topCount), 0}
+	seg, top := []rune(prefix), newTopN(topCount)
 	if node := this.find(seg); node != nil {
-		node.all(seg, &top)
+		node.all(seg, top)
 	}
-	return SearchResult(top.compact())
+	return top.result()
 }
 
 func (this *Node) substr(root *Node, pre, seg []rune, top *topN) {
@@ -123,9 +137,9 @@ func (this *Node) substr(root *Node, pre, seg []rune, top *topN) {
 }
 
 func (this *Node) SubstrSearch(sub string, topCount int) SearchResult {
-	seg, top := []rune(sub), topN{make([]*WordCount, topCount), 0}
-	this.substr(this, nil, seg, &top)
-	return SearchResult(top.compact())
+	seg, top := []rune(sub), newTopN(topCount)
+	this.substr(this, nil, seg, top)
+	return top.result()
 }
 
 func (this *Node) fuzzy(pre, seg []rune, index int, top *topN) {
@@ -147,7 +161,7 @@ func (this *Node) fuzzy(pre, seg []rune, index int, top *topN) {
 }
 
 func (this *Node) FuzzySearch(fuzzy string, topCount int) SearchResult {
-	seg, top := []rune(fuzzy), topN{make([]*WordCount, topCount), 0}
-	this.fuzzy(nil, seg, 0, &top)
-	return SearchResult(top.compact())
+	seg, top := []rune(fuzzy), newTopN(topCount)
+	this.fuzzy(nil, seg, 0, top)
+	return top.result()
 }

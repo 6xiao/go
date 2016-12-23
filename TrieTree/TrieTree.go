@@ -11,12 +11,10 @@ type WordCount struct {
 
 type SearchResult []*WordCount
 
-func (this SearchResult) Sort()         { sort.Sort(this) }
-func (this SearchResult) Len() int      { return len(this) }
-func (this SearchResult) Swap(i, j int) { this[i], this[j] = this[j], this[i] }
-func (this SearchResult) Less(i, j int) bool {
-	return len(this[i].Word) < len(this[j].Word) && this[i].Count > this[j].Count
-}
+func (this SearchResult) Sort()              { sort.Sort(this) }
+func (this SearchResult) Len() int           { return len(this) }
+func (this SearchResult) Swap(i, j int)      { this[i], this[j] = this[j], this[i] }
+func (this SearchResult) Less(i, j int) bool { return this[i].Count > this[j].Count }
 
 type topN struct {
 	res  SearchResult

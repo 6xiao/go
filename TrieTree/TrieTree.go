@@ -69,7 +69,7 @@ func NewTrieTree() *Node {
 
 func (this *Node) add(seg []rune, index, count, incr int) int {
 	if index >= len(seg) {
-		if count > 0 {
+		if count >= 0 {
 			this.Count = count
 		} else {
 			this.Count += incr

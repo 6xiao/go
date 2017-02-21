@@ -86,7 +86,9 @@ func ListenUdp(addr string, bufsize int, reactiver func(*net.UDPAddr, []byte) []
 			continue
 		}
 
-		conn.WriteToUDP(reactiver(remote, data[:nr]), remote)
+		if ret := reactiver(remote, data[:nr]); ret != nil && len(ret) > 0 {
+			conn.WriteToUDP(ret, remote)
+		}
 	}
 
 	return fmt.Errorf("udp server quit : %v ", addr)

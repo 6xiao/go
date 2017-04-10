@@ -37,7 +37,7 @@ func (this *WatchDog) eat() {
 	}
 }
 
-func (this *WatchDog) Feed(meat int64) {
+func (this *WatchDog) Feed(meat int64) bool {
 	defer Common.CheckPanic()
-	atomic.AddInt64(this.meat, meat)
+	return atomic.AddInt64(this.meat, meat) > 0
 }

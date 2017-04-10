@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 
 	"github.com/6xiao/go/Common"
+	"time"
 )
 
 /*
@@ -93,8 +94,22 @@ func (this *Pool) WaitAllQuit() {
 	this.Wait()
 }
 
+func (this *Pool) AutoKeepalive(duration time.Duration) {
+	go this.autoKeepalive(duration)
+}
+
+func (this *Pool) autoKeepalive(duration time.Duration) {
+	defer Common.CheckPanic()
+
+	for {
+		this.Keepalive()
+		time.Sleep(duration)
+	}
+}
+
 // check alive
 func (this *Pool) Keepalive() int {
+	defer Common.CheckPanic()
 	this.Lock()
 	defer this.Unlock()
 
@@ -108,6 +123,7 @@ func (this *Pool) Keepalive() int {
 
 // add goroutine manual
 func (this *Pool) AddExecutor() {
+	defer Common.CheckPanic()
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go this.executor(&wg)

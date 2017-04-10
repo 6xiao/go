@@ -63,16 +63,3 @@ func NewUUID() string {
 	u[6] = (u[6] & 0xF) | (4 << 4)
 	return fmt.Sprintf("%x-%x-%x-%x-%x", u[0:4], u[4:6], u[6:8], u[8:10], u[10:])
 }
-
-func Ternary(cond bool, valTrue, valFlase interface{}) interface{} {
-	if cond {
-		return valTrue
-	}
-	return valFlase
-}
-
-type Int64Slice []int64
-
-func (this Int64Slice) Len() int           { return len(this) }
-func (this Int64Slice) Less(i, j int) bool { return this[i] < this[j] }
-func (this Int64Slice) Swap(i, j int)      { this[i], this[j] = this[j], this[i] }

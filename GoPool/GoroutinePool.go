@@ -85,10 +85,6 @@ func (this *Pool) Count() int {
 	return int(atomic.LoadInt64(&this.count))
 }
 
-func (this *Pool) Capacity() int {
-	return int(this.capa)
-}
-
 // return after all goroutine quit in pool
 func (this *Pool) WaitAllQuit() {
 	this.Wait()

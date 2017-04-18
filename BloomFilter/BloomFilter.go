@@ -6,7 +6,7 @@ import (
 
 type BloomFilter struct {
 	haskKey []uint64
-	capa    uint64
+	mod     uint64
 	cache   *BitMapCache.Bit1Cache
 }
 
@@ -23,21 +23,13 @@ func (this *BloomFilter) Keys() []uint64 {
 	return this.haskKey
 }
 
-func (this *BloomFilter) KeySize() int {
-	return len(this.haskKey)
-}
-
-func (this *BloomFilter) Capacity() int {
-	return int(this.capa)
-}
-
 func (this *BloomFilter) Set(data []byte) {
 	for _, key := range this.haskKey {
 		hash := key
 		for _, b := range data {
 			hash = (hash << 5) + hash + uint64(b)
 		}
-		this.cache.SetLastBit(int(hash % this.capa))
+		this.cache.SetLastBit(int(hash % this.mod))
 	}
 }
 
@@ -48,7 +40,7 @@ func (this *BloomFilter) Hits(data []byte) int {
 		for _, b := range data {
 			hash = (hash << 5) + hash + uint64(b)
 		}
-		res += this.cache.GetIndex(int(hash % this.capa))
+		res += this.cache.GetIndex(int(hash % this.mod))
 	}
 	return int(res)
 }

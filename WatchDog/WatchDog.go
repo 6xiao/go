@@ -46,7 +46,7 @@ func (this *WatchDog) eat() {
 func (this *WatchDog) Feed(meat int64) bool {
 	defer Common.CheckPanic()
 
-	if meat > math.MinInt32 {
+	if meat > math.MaxInt32 {
 		return false
 	}
 

@@ -2,7 +2,6 @@ package WatchDog
 
 import (
 	"math"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -10,18 +9,19 @@ import (
 )
 
 type WatchDog struct {
-	sync.Mutex
-
 	wait time.Duration
 	hung func()
-	meat *int64
+	meat int64
 }
 
 func NewDog(duration time.Duration, hung func()) *WatchDog {
-	d := WatchDog{sync.Mutex{}, duration, hung, new(int64)}
-	d.Feed(math.MaxInt32)
+	d := new(WatchDog)
+	d.wait = duration
+	d.hung = hung
+	d.meat = math.MaxInt32
+
 	go d.eat()
-	return &d
+	return d
 }
 
 func (this *WatchDog) eat() {
@@ -30,7 +30,7 @@ func (this *WatchDog) eat() {
 	for this.hung != nil {
 		time.Sleep(this.wait)
 
-		m := atomic.LoadInt64(this.meat)
+		m := atomic.LoadInt64(&this.meat)
 		if m < 0 {
 			return
 		}
@@ -38,7 +38,7 @@ func (this *WatchDog) eat() {
 		if m == 0 {
 			this.hung()
 		} else {
-			atomic.StoreInt64(this.meat, m/2)
+			atomic.StoreInt64(&this.meat, m/2)
 		}
 	}
 }
@@ -49,11 +49,10 @@ func (this *WatchDog) Feed(meat int64) bool {
 	if meat > math.MaxInt32 {
 		return false
 	}
-
-	return atomic.AddInt64(this.meat, meat) > 0
+	return atomic.AddInt64(&this.meat, meat) > 0
 }
 
 func (this *WatchDog) Kill() {
 	defer Common.CheckPanic()
-	atomic.StoreInt64(this.meat, math.MinInt64)
+	atomic.StoreInt64(&this.meat, math.MinInt32)
 }

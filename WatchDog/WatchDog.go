@@ -43,13 +43,9 @@ func (this *WatchDog) eat() {
 	}
 }
 
-func (this *WatchDog) Feed(meat int64) bool {
+func (this *WatchDog) Feed(meat uint32) bool {
 	defer Common.CheckPanic()
-
-	if meat > math.MaxInt32 {
-		return false
-	}
-	return atomic.AddInt64(&this.meat, meat) > 0
+	return atomic.AddInt64(&this.meat, int64(meat)) > 0
 }
 
 func (this *WatchDog) Kill() {

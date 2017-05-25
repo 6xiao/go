@@ -14,11 +14,11 @@ type WatchDog struct {
 	meat int64
 }
 
-func NewDog(duration time.Duration, hung func()) *WatchDog {
+func NewDog(duration time.Duration, meat int64, hung func()) *WatchDog {
 	d := new(WatchDog)
 	d.wait = duration
 	d.hung = hung
-	d.meat = math.MaxInt32
+	d.meat = meat
 
 	go d.eat()
 	return d

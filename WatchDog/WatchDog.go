@@ -1,7 +1,6 @@
 package WatchDog
 
 import (
-	"math"
 	"sync/atomic"
 	"time"
 

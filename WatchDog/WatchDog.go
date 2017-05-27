@@ -8,9 +8,10 @@ import (
 )
 
 type WatchDog struct {
-	wait time.Duration
-	hung func()
-	meat int32
+	wait  time.Duration
+	hung  func()
+	meat  int32
+	count int
 }
 
 func NewDog(duration time.Duration, meat int32, hung func()) *WatchDog {
@@ -26,7 +27,7 @@ func NewDog(duration time.Duration, meat int32, hung func()) *WatchDog {
 func (this *WatchDog) eat() {
 	defer Common.CheckPanic()
 
-	for this.hung != nil {
+	for this.hung != nil && this.count < 10 {
 		time.Sleep(this.wait)
 
 		m := atomic.LoadInt32(&this.meat)
@@ -36,6 +37,7 @@ func (this *WatchDog) eat() {
 
 		if m == 0 {
 			this.hung()
+			this.count++
 		} else {
 			atomic.StoreInt32(&this.meat, m/2)
 		}

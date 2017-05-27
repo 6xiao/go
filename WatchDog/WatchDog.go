@@ -11,7 +11,7 @@ type WatchDog struct {
 	wait  time.Duration
 	hung  func()
 	meat  int32
-	count int
+	count int32
 }
 
 func NewDog(duration time.Duration, meat int32, hung func()) *WatchDog {
@@ -27,7 +27,7 @@ func NewDog(duration time.Duration, meat int32, hung func()) *WatchDog {
 func (this *WatchDog) eat() {
 	defer Common.CheckPanic()
 
-	for this.hung != nil && this.count < 3 {
+	for this.hung != nil && atomic.LoadInt32(&this.count) < 3 {
 		time.Sleep(this.wait)
 
 		m := atomic.LoadInt32(&this.meat)
@@ -37,20 +37,31 @@ func (this *WatchDog) eat() {
 
 		if m == 0 {
 			this.hung()
-			this.count++
+			atomic.AddInt32(&this.count, 1)
 		} else {
 			atomic.StoreInt32(&this.meat, m/2)
-			this.count = 0
+			atomic.StoreInt32(&this.count, 0)
 		}
 	}
 }
 
 func (this *WatchDog) Feed(meat uint16) bool {
 	defer Common.CheckPanic()
+
+	// meat enought
+	if atomic.LoadInt32(&this.meat) > 1024*65536 {
+		return true
+	}
+
 	return atomic.AddInt32(&this.meat, int32(meat)) > 0
 }
 
 func (this *WatchDog) Kill() {
 	defer Common.CheckPanic()
 	atomic.StoreInt32(&this.meat, -65536)
+}
+
+func (this *WatchDog) Living() bool {
+	defer Common.CheckPanic()
+	return atomic.LoadInt32(&this.count) == 0
 }

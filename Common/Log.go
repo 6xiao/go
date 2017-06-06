@@ -84,6 +84,13 @@ func InfoLog(v ...interface{}) {
 	fmt.Fprintln(logFile, NumberUTC(), offset(), "info", v)
 }
 
+func WarningLog(v ...interface{}) {
+	check()
+	logLock.Lock()
+	defer logLock.Unlock()
+	fmt.Fprintln(logFile, NumberUTC(), offset(), "warning", v)
+}
+
 func ErrorLog(v ...interface{}) {
 	check()
 	logLock.Lock()

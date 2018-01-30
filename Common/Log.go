@@ -6,34 +6,59 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sync"
 	"time"
 )
 
-var (
-	logDir  = os.TempDir()
-	logDay  = 0
-	logLock = sync.Mutex{}
-	logFile *os.File
+const (
+	LogLevelDrop = iota
+	LogLevelDebug
+	LogLevelInfo
+	LogLevelWarn
+	LogLevelError
+	LogLevelNone
 )
 
-func init() {
-	if proc, err := filepath.Abs(os.Args[0]); err == nil {
-		SetLogDir(filepath.Dir(proc))
-	}
-}
+var (
+	logDir    = ""
+	logDay    = 0
+	logLevel  = LogLevelInfo
+	logFile   = os.Stderr
+	logLock   = NewLock()
+	logTicker = time.NewTicker(time.Second)
+)
 
 func SetLogDir(dir string) {
 	logDir = dir
 }
 
+func SetLogLevel(level int) {
+	logLevel = level
+}
+
 func check() {
-	logLock.Lock()
-	defer logLock.Unlock()
+	select {
+	case <-logTicker.C:
+	default:
+		return
+	}
+
+	if len(logDir) == 0 {
+		return
+	}
+
+	if logLock.TryLock() {
+		defer logLock.Unlock()
+	} else {
+		return
+	}
 
 	now := time.Now().UTC()
 	if logDay == now.Day() {
 		return
+	}
+
+	if logFile != os.Stderr {
+		logFile.Close()
 	}
 
 	logDay = now.Day()
@@ -42,11 +67,9 @@ func check() {
 
 	newlog, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
-		logFile = os.Stderr
 		fmt.Fprintln(os.Stderr, NumberUTC(), "open log file", err, "use STDOUT")
+		logFile = os.Stderr
 	} else {
-		logFile.Sync()
-		logFile.Close()
 		logFile = newlog
 	}
 }
@@ -72,28 +95,48 @@ func offset() string {
 func DropLog(v ...interface{}) {}
 
 func DebugLog(v ...interface{}) {
+	if logLevel > LogLevelDebug {
+		return
+	}
+
 	check()
+
 	logLock.Lock()
 	defer logLock.Unlock()
 	fmt.Fprintln(logFile, NumberUTC(), offset(), "debug", v)
 }
 
 func InfoLog(v ...interface{}) {
+	if logLevel > LogLevelInfo {
+		return
+	}
+
 	check()
+
 	logLock.Lock()
 	defer logLock.Unlock()
 	fmt.Fprintln(logFile, NumberUTC(), offset(), "info", v)
 }
 
 func WarningLog(v ...interface{}) {
+	if logLevel > LogLevelWarn {
+		return
+	}
+
 	check()
+
 	logLock.Lock()
 	defer logLock.Unlock()
 	fmt.Fprintln(logFile, NumberUTC(), offset(), "warning", v)
 }
 
 func ErrorLog(v ...interface{}) {
+	if logLevel > LogLevelError {
+		return
+	}
+
 	check()
+
 	logLock.Lock()
 	defer logLock.Unlock()
 	fmt.Fprintln(logFile, NumberUTC(), offset(), "error", v)

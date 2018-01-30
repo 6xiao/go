@@ -7,6 +7,7 @@ import (
 	"io"
 	_ "net/http/pprof"
 	"os"
+	"os/exec"
 	"os/signal"
 	"runtime"
 	"syscall"
@@ -34,7 +35,7 @@ func CheckPanic() {
 		for skip := 1; ; skip++ {
 			if pc, file, line, ok := runtime.Caller(skip); ok {
 				fn := runtime.FuncForPC(pc).Name()
-				fmt.Fprintln(os.Stderr, NumberNow(), fn, fileline(file, line))
+				fmt.Fprintln(os.Stderr, NumberNow(), fn, filebase(file), line)
 			} else {
 				break
 			}
@@ -63,4 +64,10 @@ func NewUUID() string {
 	u[8] = (u[8] | 0x40) & 0x7F
 	u[6] = (u[6] & 0xF) | (4 << 4)
 	return fmt.Sprintf("%x-%x-%x-%x-%x", u[0:4], u[4:6], u[6:8], u[8:10], u[10:])
+}
+
+func RunShell(exeStr string) (string, error) {
+	cmd := exec.Command("/bin/bash", "-c", exeStr)
+	bytes, err := cmd.CombinedOutput()
+	return string(bytes), err
 }

@@ -25,6 +25,7 @@ var (
 	logFile   = os.Stderr
 	logLock   = NewLock()
 	logTicker = time.NewTicker(time.Second)
+	logSlice  = make([]interface{}, 1, 1024)
 )
 
 func SetLogDir(dir string) {
@@ -74,7 +75,7 @@ func check() {
 	}
 }
 
-func fileline(file string, line int) string {
+func filebase(file string) string {
 	beg, end := len(file)-1, len(file)
 	for ; beg >= 0; beg-- {
 		if os.IsPathSeparator(file[beg]) {
@@ -84,12 +85,7 @@ func fileline(file string, line int) string {
 			end = beg
 		}
 	}
-	return fmt.Sprint(file[beg:end], ":", line)
-}
-
-func offset() string {
-	_, file, line, _ := runtime.Caller(2)
-	return fileline(file, line)
+	return file[beg:end]
 }
 
 func DropLog(v ...interface{}) {}
@@ -101,9 +97,12 @@ func DebugLog(v ...interface{}) {
 
 	check()
 
+	_, file, line, _ := runtime.Caller(1)
+	logSlice[0] = fmt.Sprintf("%d debug %s[%d]:", NumberUTC(), filebase(file), line)
+	out := append(logSlice, v...)
 	logLock.Lock()
 	defer logLock.Unlock()
-	fmt.Fprintln(logFile, NumberUTC(), offset(), "debug", v)
+	fmt.Fprintln(logFile, out...)
 }
 
 func InfoLog(v ...interface{}) {
@@ -113,9 +112,12 @@ func InfoLog(v ...interface{}) {
 
 	check()
 
+	_, file, line, _ := runtime.Caller(1)
+	logSlice[0] = fmt.Sprintf("%d info %s[%d]:", NumberUTC(), filebase(file), line)
+	out := append(logSlice, v...)
 	logLock.Lock()
 	defer logLock.Unlock()
-	fmt.Fprintln(logFile, NumberUTC(), offset(), "info", v)
+	fmt.Fprintln(logFile, out...)
 }
 
 func WarningLog(v ...interface{}) {
@@ -125,9 +127,12 @@ func WarningLog(v ...interface{}) {
 
 	check()
 
+	_, file, line, _ := runtime.Caller(1)
+	logSlice[0] = fmt.Sprintf("%d warn %s[%d]:", NumberUTC(), filebase(file), line)
+	out := append(logSlice, v...)
 	logLock.Lock()
 	defer logLock.Unlock()
-	fmt.Fprintln(logFile, NumberUTC(), offset(), "warning", v)
+	fmt.Fprintln(logFile, out...)
 }
 
 func ErrorLog(v ...interface{}) {
@@ -137,14 +142,10 @@ func ErrorLog(v ...interface{}) {
 
 	check()
 
+	_, file, line, _ := runtime.Caller(1)
+	logSlice[0] = fmt.Sprintf("%d error %s[%d]:", NumberUTC(), filebase(file), line)
+	out := append(logSlice, v...)
 	logLock.Lock()
 	defer logLock.Unlock()
-	fmt.Fprintln(logFile, NumberUTC(), offset(), "error", v)
-}
-
-func CustomLog(v ...interface{}) {
-	check()
-	logLock.Lock()
-	defer logLock.Unlock()
-	fmt.Fprintln(logFile, NumberUTC(), v)
+	fmt.Fprintln(logFile, out...)
 }

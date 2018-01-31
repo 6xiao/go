@@ -1,6 +1,7 @@
 package Common
 
 import (
+	"runtime"
 	"sync/atomic"
 	"time"
 )
@@ -59,18 +60,42 @@ func (this *Lock) TimeoutSpinLock(t time.Duration) bool {
 			return this.SpinLock(0)
 
 		default:
-			if this.SpinLock(8192) {
+			if this.SpinLock(1024) {
 				return true
 			}
 		}
 	}
 }
 
-func (this *Lock) Unlock() {
-	if atomic.SwapInt32(&this.flag, unlock) == locked {
-		return
+func (this *Lock) SchedLock() {
+	for {
+		if this.SpinLock(0) {
+			return
+		}
+		runtime.Gosched()
 	}
+}
 
+func (this *Lock) TimeoutSchedLock(t time.Duration) bool {
+	tk := time.NewTicker(t)
+	defer tk.Stop()
+
+	for {
+		select {
+		case <-tk.C:
+			return this.SpinLock(0)
+
+		default:
+			if this.SpinLock(0) {
+				return true
+			}
+		}
+		runtime.Gosched()
+	}
+}
+
+func (this *Lock) Unlock() {
+	atomic.SwapInt32(&this.flag, unlock)
 	select {
 	case this.unlockChan <- true:
 	default:

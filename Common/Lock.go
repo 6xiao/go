@@ -7,9 +7,8 @@ import (
 )
 
 const (
-	unlock = 1
-	locked = 0
-	waited = -1
+	unlock = 0
+	locked = 1
 )
 
 type Lock struct {
@@ -19,18 +18,13 @@ type Lock struct {
 
 func NewLock() *Lock {
 	l := new(Lock)
-	l.flag = unlock
 	l.unlockChan = make(chan bool, 3)
 	return l
 }
 
 func (this *Lock) Lock() {
-	if atomic.AddInt32(&this.flag, waited) == locked {
-		return
-	}
-
 	for {
-		if atomic.LoadInt32(&this.flag) >= locked && atomic.SwapInt32(&this.flag, waited) == unlock {
+		if atomic.CompareAndSwapInt32(&this.flag, unlock, locked) {
 			return
 		}
 		<-this.unlockChan
@@ -98,6 +92,34 @@ func (this *Lock) Unlock() {
 	atomic.SwapInt32(&this.flag, unlock)
 	select {
 	case this.unlockChan <- true:
+	default:
+	}
+}
+
+type Semaphore struct {
+	flag chan bool
+}
+
+func NewSemaphore(capa int) *Semaphore {
+	return &Semaphore{make(chan bool, capa)}
+}
+
+func (this *Semaphore) Alloc() {
+	this.flag <- true
+}
+
+func (this *Semaphore) TryAlloc() bool {
+	select {
+	case this.flag <- true:
+		return true
+	default:
+	}
+	return false
+}
+
+func (this *Semaphore) Free() {
+	select {
+	case <-this.flag:
 	default:
 	}
 }

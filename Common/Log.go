@@ -21,12 +21,17 @@ const (
 var (
 	logDir    = ""
 	logDay    = 0
+	logTime   = true
 	logLevel  = LogLevelInfo
 	logFile   = os.Stderr
 	logLock   = NewLock()
 	logTicker = time.NewTicker(time.Second)
 	logSlice  = make([]interface{}, 1, 1024)
 )
+
+func SetLogTime(logtime bool) {
+	logTime = logtime
+}
 
 func SetLogDir(dir string) {
 	logDir = dir
@@ -44,27 +49,25 @@ func check() {
 		return
 	}
 
-	if len(logDir) == 0 {
-		return
-	}
-
 	if logLock.TryLock() {
 		defer logLock.Unlock()
 	} else {
 		return
 	}
 
-	now := time.Now().UTC()
-	if logDay == now.Day() {
-		return
+	if now := time.Now().UTC(); logDay != now.Day() {
+		newfile(now)
 	}
-
-	newfile(now)
 }
 
 func newfile(now time.Time) {
 	if logFile != os.Stderr {
 		logFile.Close()
+		logFile = os.Stderr
+	}
+
+	if len(logDir) == 0 {
+		return
 	}
 
 	logDay = now.Day()
@@ -74,7 +77,6 @@ func newfile(now time.Time) {
 	newlog, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, NumberUTC(), "open log file", filename, err, "use STDOUT")
-		logFile = os.Stderr
 	} else {
 		logFile = newlog
 	}
@@ -93,65 +95,38 @@ func filebase(file string) string {
 	return file[beg:end]
 }
 
-func prefix(level string) {
+func writeLog(level int, pre string, v ...interface{}) {
+	if logLevel > level {
+		return
+	}
+
+	check()
+	logLock.Lock()
+	defer logLock.Unlock()
+
 	_, file, line, _ := runtime.Caller(2)
-	logSlice[0] = fmt.Sprintf("%d %s %s[%d]:", NumberUTC(), level, filebase(file), line)
+	if logTime {
+		logSlice[0] = fmt.Sprintf("%d %s %s[%d]:", NumberUTC(), pre, filebase(file), line)
+	} else {
+		logSlice[0] = fmt.Sprintf("- %s %s[%d]:", pre, filebase(file), line)
+	}
+	fmt.Fprintln(logFile, append(logSlice, v...)...)
 }
 
 func DropLog(v ...interface{}) {}
 
 func DebugLog(v ...interface{}) {
-	if logLevel > LogLevelDebug {
-		return
-	}
-
-	check()
-	prefix("debug")
-
-	out := append(logSlice, v...)
-	logLock.Lock()
-	defer logLock.Unlock()
-	fmt.Fprintln(logFile, out...)
+	writeLog(LogLevelDebug, "debug", v...)
 }
 
 func InfoLog(v ...interface{}) {
-	if logLevel > LogLevelInfo {
-		return
-	}
-
-	check()
-	prefix("info")
-
-	out := append(logSlice, v...)
-	logLock.Lock()
-	defer logLock.Unlock()
-	fmt.Fprintln(logFile, out...)
+	writeLog(LogLevelInfo, "info", v...)
 }
 
 func WarningLog(v ...interface{}) {
-	if logLevel > LogLevelWarn {
-		return
-	}
-
-	check()
-	prefix("warn")
-
-	out := append(logSlice, v...)
-	logLock.Lock()
-	defer logLock.Unlock()
-	fmt.Fprintln(logFile, out...)
+	writeLog(LogLevelWarn, "warn", v...)
 }
 
 func ErrorLog(v ...interface{}) {
-	if logLevel > LogLevelError {
-		return
-	}
-
-	check()
-	prefix("error")
-
-	out := append(logSlice, v...)
-	logLock.Lock()
-	defer logLock.Unlock()
-	fmt.Fprintln(logFile, out...)
+	writeLog(LogLevelError, "error", v...)
 }

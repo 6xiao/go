@@ -28,15 +28,9 @@ var (
 	logSlice  = make([]interface{}, 1, 1024)
 )
 
-func init() {
-	select {
-	case logTicker.C <- time.Now():
-	default:
-	}
-}
-
 func SetLogDir(dir string) {
 	logDir = dir
+	newfile(time.Now())
 }
 
 func SetLogLevel(level int) {
@@ -65,6 +59,10 @@ func check() {
 		return
 	}
 
+	newfile(now)
+}
+
+func newfile(now time.Time) {
 	if logFile != os.Stderr {
 		logFile.Close()
 	}

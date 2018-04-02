@@ -68,7 +68,7 @@ func check() {
 
 	newlog, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, NumberUTC(), "open log file", err, "use STDOUT")
+		fmt.Fprintln(os.Stderr, NumberUTC(), "open log file", filename, err, "use STDOUT")
 		logFile = os.Stderr
 	} else {
 		logFile = newlog
@@ -88,6 +88,11 @@ func filebase(file string) string {
 	return file[beg:end]
 }
 
+func prefix(level string) {
+	_, file, line, _ := runtime.Caller(2)
+	logSlice[0] = fmt.Sprintf("%d %s %s[%d]:", NumberUTC(), level, filebase(file), line)
+}
+
 func DropLog(v ...interface{}) {}
 
 func DebugLog(v ...interface{}) {
@@ -96,9 +101,8 @@ func DebugLog(v ...interface{}) {
 	}
 
 	check()
+	prefix("debug")
 
-	_, file, line, _ := runtime.Caller(1)
-	logSlice[0] = fmt.Sprintf("%d debug %s[%d]:", NumberUTC(), filebase(file), line)
 	out := append(logSlice, v...)
 	logLock.Lock()
 	defer logLock.Unlock()
@@ -111,9 +115,8 @@ func InfoLog(v ...interface{}) {
 	}
 
 	check()
+	prefix("info")
 
-	_, file, line, _ := runtime.Caller(1)
-	logSlice[0] = fmt.Sprintf("%d info %s[%d]:", NumberUTC(), filebase(file), line)
 	out := append(logSlice, v...)
 	logLock.Lock()
 	defer logLock.Unlock()
@@ -126,9 +129,8 @@ func WarningLog(v ...interface{}) {
 	}
 
 	check()
+	prefix("warn")
 
-	_, file, line, _ := runtime.Caller(1)
-	logSlice[0] = fmt.Sprintf("%d warn %s[%d]:", NumberUTC(), filebase(file), line)
 	out := append(logSlice, v...)
 	logLock.Lock()
 	defer logLock.Unlock()
@@ -141,9 +143,8 @@ func ErrorLog(v ...interface{}) {
 	}
 
 	check()
+	prefix("error")
 
-	_, file, line, _ := runtime.Caller(1)
-	logSlice[0] = fmt.Sprintf("%d error %s[%d]:", NumberUTC(), filebase(file), line)
 	out := append(logSlice, v...)
 	logLock.Lock()
 	defer logLock.Unlock()

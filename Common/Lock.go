@@ -37,11 +37,11 @@ func (this *Lock) SpinLock(count int) bool {
 			return true
 		}
 	}
-	return atomic.CompareAndSwapInt32(&this.flag, unlock, locked)
+	return false
 }
 
 func (this *Lock) TryLock() bool {
-	return this.SpinLock(0)
+	return this.SpinLock(1)
 }
 
 func (this *Lock) TimeoutSpinLock(t time.Duration) bool {
@@ -51,7 +51,7 @@ func (this *Lock) TimeoutSpinLock(t time.Duration) bool {
 	for {
 		select {
 		case <-tk.C:
-			return this.SpinLock(0)
+			return this.SpinLock(1)
 
 		default:
 			if this.SpinLock(1024) {
@@ -63,7 +63,7 @@ func (this *Lock) TimeoutSpinLock(t time.Duration) bool {
 
 func (this *Lock) SchedLock() {
 	for {
-		if this.SpinLock(0) {
+		if this.SpinLock(1024) {
 			return
 		}
 		runtime.Gosched()
@@ -77,10 +77,10 @@ func (this *Lock) TimeoutSchedLock(t time.Duration) bool {
 	for {
 		select {
 		case <-tk.C:
-			return this.SpinLock(0)
+			return this.SpinLock(1)
 
 		default:
-			if this.SpinLock(0) {
+			if this.SpinLock(1024) {
 				return true
 			}
 		}
@@ -117,9 +117,11 @@ func (this *Semaphore) TryAlloc() bool {
 	return false
 }
 
-func (this *Semaphore) Free() {
+func (this *Semaphore) Free() bool {
 	select {
 	case <-this.flag:
+		return true
 	default:
 	}
+	return false
 }

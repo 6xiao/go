@@ -96,14 +96,6 @@ func RuntimeInfo(w io.Writer) {
 	fmt.Fprintln(w, "NrMemMCacheSys :", mem.MCacheSys)
 	fmt.Fprintln(w, "NrMemMCacheInuse :", mem.MCacheInuse)
 
-	n, ok := runtime.MemProfile(nil, true)
-	pr := make([]runtime.MemProfileRecord, n+128)
-	n, ok = runtime.MemProfile(pr, true)
-	for i := 0; ok && i < n; i++ {
-		fmt.Fprintln(w, "NrMemProfileInuse :", pr[i].InUseBytes(), "#", i)
-		fmt.Fprintln(w, "NrMemProfileObjects :", pr[i].InUseObjects(), "#", i)
-	}
-
 	ps := pprof.Profiles()
 	for _, ps := range ps {
 		fmt.Fprintf(w, "NrProfile-%s : %d\n", ps.Name(), ps.Count())

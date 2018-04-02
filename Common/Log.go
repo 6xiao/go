@@ -30,7 +30,7 @@ var (
 
 func init() {
 	select {
-	case logTicker <- time.Now():
+	case logTicker.C <- time.Now():
 	default:
 	}
 }

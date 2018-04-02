@@ -28,6 +28,13 @@ var (
 	logSlice  = make([]interface{}, 1, 1024)
 )
 
+func init() {
+	select {
+	case logTicker <- time.Now():
+	default:
+	}
+}
+
 func SetLogDir(dir string) {
 	logDir = dir
 }
